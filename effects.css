@@ -1,0 +1,353 @@
+/* ═══════════════════════════════════════════════════════════
+   effects.css  —  Text & Block Visual Effects
+   
+   All classes are prefixed with fx- (effect).
+   Apply any of these to a <span> wrapping text in a post.
+   The Quill editor applies them via custom blots registered
+   in editor.js. They also render correctly in the post-body
+   display area (which also receives the raw Quill HTML).
+   
+   EFFECTS AVAILABLE
+   ─────────────────
+   Neon Glow:   fx-neon-cyan · fx-neon-magenta · fx-neon-green
+                fx-neon-blue · fx-neon-orange
+   Gradient:    fx-gradient-fire · fx-gradient-ocean
+                fx-gradient-aurora · fx-gradient-cyber
+   Animated:    fx-glitch · fx-pulse · fx-rainbow · fx-float
+   Style:       fx-highlight-cyber · fx-text-shadow-hard
+                fx-code-inline
+   ═══════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────────────
+   SHARED BASE for all effect spans
+   These ensure effects display inline and don't break layout
+   ───────────────────────────────────────────────────────── */
+[class^="fx-"],
+[class*=" fx-"] {
+  display: inline;
+  position: relative;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   NEON GLOW EFFECTS
+   Bright text colour + layered text-shadow to simulate glow
+   ═══════════════════════════════════════════════════════════ */
+
+/* Neon Cyan */
+.fx-neon-cyan {
+  color: #00e5ff !important;
+  text-shadow:
+    0 0 4px #00e5ff,
+    0 0 12px rgba(0, 229, 255, 0.7),
+    0 0 28px rgba(0, 229, 255, 0.4),
+    0 0 56px rgba(0, 229, 255, 0.2);
+  font-weight: bold;
+}
+
+/* Neon Magenta / Hot Pink */
+.fx-neon-magenta {
+  color: #ff2df7 !important;
+  text-shadow:
+    0 0 4px #ff2df7,
+    0 0 12px rgba(255, 45, 247, 0.7),
+    0 0 28px rgba(255, 45, 247, 0.4),
+    0 0 56px rgba(255, 45, 247, 0.2);
+  font-weight: bold;
+}
+
+/* Neon Green (Matrix/terminal look) */
+.fx-neon-green {
+  color: #00ff88 !important;
+  text-shadow:
+    0 0 4px #00ff88,
+    0 0 12px rgba(0, 255, 136, 0.7),
+    0 0 28px rgba(0, 255, 136, 0.4),
+    0 0 56px rgba(0, 255, 136, 0.2);
+  font-weight: bold;
+}
+
+/* Neon Blue */
+.fx-neon-blue {
+  color: #0080ff !important;
+  text-shadow:
+    0 0 4px #0080ff,
+    0 0 12px rgba(0, 128, 255, 0.7),
+    0 0 28px rgba(0, 128, 255, 0.4),
+    0 0 56px rgba(0, 128, 255, 0.2);
+  font-weight: bold;
+}
+
+/* Neon Orange */
+.fx-neon-orange {
+  color: #ff7700 !important;
+  text-shadow:
+    0 0 4px #ff7700,
+    0 0 12px rgba(255, 119, 0, 0.7),
+    0 0 28px rgba(255, 119, 0, 0.4),
+    0 0 56px rgba(255, 119, 0, 0.2);
+  font-weight: bold;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   GRADIENT TEXT EFFECTS
+   Uses background-clip: text technique.
+   NOTE: requires -webkit prefix for Safari/Chrome.
+         background-size: 200% enables the animated shift.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Shared gradient base */
+.fx-gradient-fire,
+.fx-gradient-ocean,
+.fx-gradient-aurora,
+.fx-gradient-cyber {
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  font-weight: bold;
+  background-size: 200% auto;
+}
+
+/* Fire gradient — red → orange → yellow */
+.fx-gradient-fire {
+  background-image: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff4500 25%,
+    #ff8800 50%,
+    #ffcc00 75%,
+    #ff0000 100%
+  );
+  animation: gradient-shift 3s linear infinite;
+}
+
+/* Ocean gradient — deep blue → aqua → teal */
+.fx-gradient-ocean {
+  background-image: linear-gradient(
+    90deg,
+    #0033ff 0%,
+    #0088ff 30%,
+    #00ddff 60%,
+    #00ffcc 80%,
+    #0033ff 100%
+  );
+  animation: gradient-shift 4s linear infinite;
+}
+
+/* Aurora gradient — purple → cyan → green */
+.fx-gradient-aurora {
+  background-image: linear-gradient(
+    90deg,
+    #8800ff 0%,
+    #dd00ff 20%,
+    #00ddff 50%,
+    #00ff88 80%,
+    #8800ff 100%
+  );
+  animation: gradient-shift 4s linear infinite;
+}
+
+/* Cyber gradient — cyan → magenta (brand colours) */
+.fx-gradient-cyber {
+  background-image: linear-gradient(
+    90deg,
+    #00e5ff 0%,
+    #0080ff 33%,
+    #8800ff 66%,
+    #ff2df7 100%
+  );
+  animation: gradient-shift 3s linear infinite;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATED EFFECTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── GLITCH ─────────────────────────────────────────────── */
+/*
+  Creates a digital glitch look by using before/after pseudo-elements
+  with chromatic aberration (offset coloured shadows).
+  The element needs position:relative to anchor the pseudo-elements.
+*/
+.fx-glitch {
+  position: relative;
+  color: #fff !important;
+  animation: glitch-base 2.5s steps(1) infinite;
+}
+
+.fx-glitch::before,
+.fx-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fx-glitch::before {
+  color: #ff2df7;
+  animation: glitch-before 2.5s steps(1) infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 0 40%);
+}
+
+.fx-glitch::after {
+  color: #00e5ff;
+  animation: glitch-after 2.5s steps(1) infinite;
+  clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+}
+
+/* ── PULSE ──────────────────────────────────────────────── */
+/*
+  Text breathes in/out with glow intensity cycling.
+*/
+.fx-pulse {
+  color: #ffe600 !important;
+  animation: pulse-glow 1.8s ease-in-out infinite;
+}
+
+/* ── RAINBOW ────────────────────────────────────────────── */
+/*
+  Full spectrum hue-rotate creates a continuous rainbow cycle.
+*/
+.fx-rainbow {
+  color: #ff0000 !important;
+  animation: rainbow-hue 1.5s linear infinite;
+  font-weight: bold;
+}
+
+/* ── FLOAT ──────────────────────────────────────────────── */
+/*
+  Subtle vertical floating motion with soft glow.
+*/
+.fx-float {
+  display: inline-block !important; /* Must be block-level to transform */
+  color: #a0c8ff !important;
+  text-shadow: 0 0 12px rgba(160, 200, 255, 0.5);
+  animation: float-bob 2.5s ease-in-out infinite;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STYLE EFFECTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── CYBER HIGHLIGHT ────────────────────────────────────── */
+/*
+  Dark text on bright cyan background — like a marker highlight.
+  The box-shadow creates a "glow" around the highlighted area.
+*/
+.fx-highlight-cyber {
+  background: #00e5ff !important;
+  color: #000810 !important;
+  padding: 0 5px 1px;
+  border-radius: 3px;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.6), 0 0 24px rgba(0, 229, 255, 0.3);
+}
+
+/* ── HARD DROP SHADOW ───────────────────────────────────── */
+/*
+  Chunky offset drop shadow — retro/stencil feel.
+*/
+.fx-text-shadow-hard {
+  color: #fff !important;
+  text-shadow:
+    3px 3px 0 #ff2df7,
+    6px 6px 0 rgba(255, 45, 247, 0.3);
+  font-weight: bold;
+}
+
+/* ── INLINE CODE ────────────────────────────────────────── */
+/*
+  Monospace code style — useful for variable names, commands, etc.
+*/
+.fx-code-inline {
+  font-family: 'Space Mono', 'Courier New', monospace !important;
+  font-size: 0.9em !important;
+  color: #00ff88 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(0, 255, 136, 0.3) !important;
+  padding: 1px 6px !important;
+  border-radius: 3px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAME DEFINITIONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Gradient text shift (fire, ocean, aurora, cyber) */
+@keyframes gradient-shift {
+  from { background-position: 0% center; }
+  to   { background-position: 200% center; }
+}
+
+/* Glitch base movement */
+@keyframes glitch-base {
+  0%, 85%, 100% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+  87% {
+    transform: translate(-2px, 1px);
+    text-shadow: 2px 0 #ff2df7;
+  }
+  89% {
+    transform: translate(2px, -1px);
+    text-shadow: -2px 0 #00e5ff;
+  }
+  91% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+}
+
+/* Glitch before-pseudo offset */
+@keyframes glitch-before {
+  0%, 85%, 100% { transform: translate(0); opacity: 0; }
+  87% { transform: translate(3px, 0); opacity: 0.8; }
+  89% { transform: translate(-3px, 0); opacity: 0.8; }
+  91% { transform: translate(0); opacity: 0; }
+}
+
+/* Glitch after-pseudo offset */
+@keyframes glitch-after {
+  0%, 85%, 100% { transform: translate(0); opacity: 0; }
+  88% { transform: translate(-3px, 0); opacity: 0.8; }
+  90% { transform: translate(3px, 0); opacity: 0.8; }
+  92% { transform: translate(0); opacity: 0; }
+}
+
+/* Pulse glow breathe */
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 4px #ffe600,
+      0 0 10px rgba(255, 230, 0, 0.6),
+      0 0 20px rgba(255, 230, 0, 0.3);
+  }
+  50% {
+    text-shadow:
+      0 0 10px #ffe600,
+      0 0 25px rgba(255, 230, 0, 0.8),
+      0 0 50px rgba(255, 230, 0, 0.5),
+      0 0 80px rgba(255, 230, 0, 0.2);
+  }
+}
+
+/* Rainbow hue rotation */
+@keyframes rainbow-hue {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* Float bobbing */
+@keyframes float-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
