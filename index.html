@@ -25,7 +25,7 @@
 <header class="site-header">
   <div class="header-inner container">
     <div class="logo" id="nav-logo"><span>[</span>BP<span>]</span></div>
-    <div class="avatar mini-avatar" id="nav-avatar" style="display: none; width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; margin-right: 0.5rem; cursor: pointer;">BP</div>
+    <div class="avatar mini-avatar" id="nav-avatar" style="display: none; width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; margin-right: 0.5rem; cursor: pointer;"><img src="images/avatar.png" alt="BP"></div>
     
     <nav class="main-nav" id="dynamic-nav">
       <!-- Tabs will be injected here automatically -->
@@ -45,7 +45,7 @@
 
     <div class="profile-card">
       <div class="avatar-col">
-        <div class="avatar">BP</div>
+        <div class="avatar"><img src="images/avatar.png" alt="BP"></div>
         <div class="status-pill">
           <span class="status-dot"></span>
           Available for Projects
@@ -293,12 +293,29 @@ function openPostViewer(url) {
   iframe.onload = () => {
     try {
       const doc = iframe.contentWindow.document;
-      iframe.style.height = (doc.documentElement.scrollHeight || doc.body.scrollHeight) + 'px';
+      
+      // Hide the inner "Back to Portfolio" link to avoid duplicates
+      const innerBack = doc.querySelector('.nav-link');
+      if (innerBack && innerBack.textContent.includes('Back to Portfolio')) {
+        innerBack.style.display = 'none';
+      }
+      
+      // Make iframe background transparent so it blends!
+      if (doc.body) {
+        doc.body.style.backgroundColor = 'transparent';
+        doc.body.style.backgroundImage = 'none';
+      }
+
+      const updateHeight = () => {
+        iframe.style.height = '0px'; // reset
+        iframe.style.height = (doc.documentElement.scrollHeight || doc.body.scrollHeight) + 50 + 'px';
+      };
+      
+      updateHeight();
+      setTimeout(updateHeight, 300); // Check again after fonts/images load
       
       // Setup mutation observer to keep resizing if content changes
-      new MutationObserver(() => {
-        iframe.style.height = (doc.documentElement.scrollHeight || doc.body.scrollHeight) + 'px';
-      }).observe(doc.body, { childList: true, subtree: true, attributes: true });
+      new MutationObserver(updateHeight).observe(doc.body, { childList: true, subtree: true, attributes: true });
 
       // Intercept any "Back to Portfolio" links inside the iframe
       const links = doc.querySelectorAll('a[href="index.html"]');
@@ -310,6 +327,9 @@ function openPostViewer(url) {
       });
     } catch (e) {
       console.warn('Could not auto-resize iframe (maybe cross-origin if testing locally)', e);
+      // Fallback for local testing: allow scrolling natively
+      iframe.style.minHeight = '85vh';
+      iframe.setAttribute('scrolling', 'auto');
     }
   };
 }
