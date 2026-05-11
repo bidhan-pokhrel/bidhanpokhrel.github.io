@@ -3,456 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Bidhan Pokhrel — Data & AI Engineer, Solo Developer. Building intelligent systems in Dubai, UAE.">
-  <title>Bidhan Pokhrel — Data &amp; AI Engineer</title>
+  <title>Bidhan Pokhrel — Data & AI Engineer</title>
+  <meta name="description" content="Bidhan Pokhrel — Data & AI Engineer. Making AI more better.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-  <link rel="stylesheet" href="effects.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- ── SITE HEADER ── -->
-  <header class="site-header" id="site-header">
-    <div class="header-inner container">
-      <div class="site-logo"><span class="logo-bracket">[</span><span class="logo-name">BP</span><span class="logo-bracket">]</span></div>
-      <nav class="main-nav">
-        <button class="nav-tab active" data-tab="devlog">
-          <i class="fa-solid fa-terminal nav-icon"></i> Dev Log <span class="nav-indicator"></span>
-        </button>
-        <button class="nav-tab" data-tab="apps">
-          <i class="fa-solid fa-rocket nav-icon"></i> Published Apps <span class="nav-indicator"></span>
-        </button>
-      </nav>
-      <div class="header-controls">
-        <button class="btn btn--ghost btn--sm admin-only hidden" id="btn-new-post">
-          <i class="fa-solid fa-plus"></i> New Post
-        </button>
-        <button class="btn btn--icon admin-only hidden" id="btn-settings" title="Settings">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-        <!-- onclick="toggleLogin()" is the bulletproof fallback — always works -->
-        <button class="btn btn--login" id="btn-login-toggle" onclick="toggleLogin()">
-          <i class="fa-solid fa-lock"></i>
-          <span id="login-btn-text">Login</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ── MAIN ── -->
-  <main class="site-main">
-    <div class="container">
-
-      <!-- PROFILE CARD -->
-      <div class="profile-card">
-        <div class="profile-avatar-wrap">
-          <div class="avatar-circle">
-            <img id="profile-avatar-img" src="" alt=""
-                 onerror="this.style.display='none';document.getElementById('avatar-fallback').style.display='flex'">
-            <div id="avatar-fallback" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
-              <span id="avatar-initials">BP</span>
-            </div>
-          </div>
-          <div class="status-pill" id="profile-status-badge">
-            <span class="status-dot"></span>
-            <span id="profile-status">Available for Projects</span>
-          </div>
-          <button class="btn btn--ghost btn--sm admin-only hidden profile-edit-btn" id="btn-edit-profile" style="margin-top:.5rem;font-size:.72rem;">
-            <i class="fa-solid fa-pen"></i> Edit Profile
-          </button>
-        </div>
-
-        <div class="profile-info">
-          <div class="profile-label">// DEVELOPER_PROFILE</div>
-          <h1 class="profile-name" id="profile-name">Bidhan Pokhrel</h1>
-          <div class="profile-role" id="profile-role-text">Data &amp; AI Engineer &middot; Solo Developer</div>
-          <p class="profile-bio" id="profile-bio">Building intelligent systems and shipping production-grade AI products from Dubai. Passionate about turning raw data into real-world impact.</p>
-          <div class="profile-meta">
-            <span class="meta-item"><i class="fa-solid fa-location-dot"></i><span id="profile-location">Dubai, UAE</span></span>
-            <span class="meta-item"><i class="fa-solid fa-flag"></i><span id="profile-origin">Built in Nepal &#127475;&#127477;</span></span>
-            <span class="meta-item"><i class="fa-solid fa-microchip"></i><span id="profile-experience">5+ Years Experience</span></span>
-          </div>
-          <div class="social-links">
-            <a href="#" class="social-link" id="social-github" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
-            <a href="#" class="social-link" id="social-linkedin" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i> LinkedIn</a>
-            <a href="#" class="social-link" id="social-twitter" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i> Twitter</a>
-            <a href="#" class="social-link" id="social-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
-            <a href="#" class="social-link hidden" id="social-website" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> Website</a>
-          </div>
-          <div id="footer-tagline" style="font-size:.78rem;color:var(--text-3);margin-top:.75rem;font-style:italic;"></div>
-        </div>
-
-        <div class="profile-stats">
-          <div class="stat-box"><div class="stat-number" id="stat-posts">0</div><div class="stat-label">POSTS</div></div>
-          <div class="stat-box"><div class="stat-number" id="stat-apps">0</div><div class="stat-label">APPS</div></div>
-          <div class="stat-box"><div class="stat-number" id="stat-skills">0</div><div class="stat-label">SKILLS</div></div>
-        </div>
-      </div>
-
-      <!-- SKILLS STRIP -->
-      <div class="skills-strip">
-        <div class="skills-strip-label">// TECH_STACK</div>
-        <div class="skills-marquee">
-          <div class="marquee-track">
-            <div class="marquee-content" id="skills-marquee-1"></div>
-            <div class="marquee-content" id="skills-marquee-2"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CONTENT TABS -->
-      <div class="content-section">
-
-        <!-- DEV LOG TAB -->
-        <div class="tab-pane active" id="tab-devlog">
-          <div class="section-header">
-            <div class="section-heading">
-              <div>
-                <div class="section-tag">// DEV_LOG</div>
-                <h2 class="section-title">What I'm Building</h2>
-                <p class="section-sub">Projects, experiments &amp; development updates</p>
-              </div>
-            </div>
-            <button class="btn btn--primary admin-only hidden" id="btn-new-devlog">
-              <i class="fa-solid fa-plus"></i> New Entry
-            </button>
-          </div>
-          <div class="posts-grid" id="devlog-posts-grid">
-            <div class="empty-state" id="devlog-empty">
-              <div class="empty-state-icon"><i class="fa-solid fa-code"></i></div>
-              <h3>No dev log entries yet</h3>
-              <p>Log in to post your first development update.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- APPS TAB -->
-        <div class="tab-pane" id="tab-apps">
-          <div class="section-header">
-            <div class="section-heading">
-              <div>
-                <div class="section-tag">// PUBLISHED_APPS</div>
-                <h2 class="section-title">My Applications</h2>
-                <p class="section-sub">Apps I've built and shipped</p>
-              </div>
-            </div>
-            <button class="btn btn--primary admin-only hidden" id="btn-new-app">
-              <i class="fa-solid fa-plus"></i> Add App
-            </button>
-          </div>
-          <div class="posts-grid" id="apps-grid">
-            <div class="empty-state" id="apps-empty">
-              <div class="empty-state-icon"><i class="fa-solid fa-rocket"></i></div>
-              <h3>No published apps yet</h3>
-              <p>Log in to add your first published application.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </main>
-
-  <!-- ── FOOTER ── -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <span>[BP] &copy; <span id="footer-year"></span> Bidhan Pokhrel</span>
-      <span>Built in Nepal &#127475;&#127477;</span>
-      <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:.4rem;vertical-align:middle;"></span>Online</span>
-    </div>
-  </footer>
-
-  <!-- ─────────────────────────────────────────────
-       MODALS
-  ───────────────────────────────────────────────── -->
-
-  <!-- LOGIN MODAL -->
-  <div class="modal-overlay" id="modal-login" role="dialog" aria-modal="true">
-    <div class="modal modal--sm">
-      <div class="modal-header">
-        <div class="modal-title-area">
-          <span class="modal-tag">// SECURE_ACCESS</span>
-          <h2 class="modal-title" id="modal-login-title">Admin Login</h2>
-        </div>
-        <button class="modal-close" data-close="modal-login"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <form id="login-form" novalidate>
-          <div class="form-group">
-            <label for="login-username" class="form-label">Username</label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-user input-icon"></i>
-              <input type="text" id="login-username" class="form-input" placeholder="Username" autocomplete="username" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="login-password" class="form-label">Password</label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="login-password" class="form-input" placeholder="Password" autocomplete="current-password" required>
-              <button type="button" class="input-toggle-pw" id="toggle-password"><i class="fa-solid fa-eye"></i></button>
-            </div>
-          </div>
-          <div id="login-error" class="form-error hidden">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span id="login-error-msg">Invalid credentials.</span>
-          </div>
-          <button type="submit" class="btn btn--primary btn--full" id="btn-do-login" style="margin-top:.5rem;">
-            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
-          </button>
-          <p style="text-align:center;font-size:.72rem;color:var(--text-3);margin-top:.75rem;">Default: bidhan / Admin@2024</p>
-        </form>
-      </div>
+<header class="site-header">
+  <div class="header-inner container">
+    <div class="logo"><span>[</span>BP<span>]</span></div>
+    <nav class="main-nav">
+      <button class="nav-btn active" data-tab="devlog">
+        <i class="fa-solid fa-terminal"></i> Dev Log
+      </button>
+      <button class="nav-btn" data-tab="apps">
+        <i class="fa-solid fa-rocket"></i> Published Apps
+      </button>
+            <button class="nav-btn" data-tab="apps">
+        <i class="fa-solid fa-rocket"></i> Privacy Policy
+      </button>
+    </nav>
+    <div class="header-right">
+      <!-- No login needed — edit HTML directly to update profile -->
     </div>
   </div>
+</header>
 
-  <!-- EDITOR MODAL -->
-  <div class="modal-overlay" id="modal-editor" role="dialog" aria-modal="true">
-    <div class="modal modal--full">
-      <div class="modal-header">
-        <div class="modal-title-area">
-          <span class="modal-tag" id="editor-modal-tag">// NEW_POST</span>
-          <h2 class="modal-title" id="modal-editor-title">Create Post</h2>
-        </div>
-        <div class="editor-header-controls">
-          <span id="editor-saving-indicator" class="hidden" style="font-size:.75rem;color:var(--orange);">Saving&#8230;</span>
-          <button class="btn btn--ghost btn--sm" id="btn-save-draft"><i class="fa-regular fa-floppy-disk"></i> Draft</button>
-          <button class="btn btn--primary btn--sm" id="btn-publish-post"><i class="fa-solid fa-paper-plane"></i> Publish</button>
-          <button class="modal-close" data-close="modal-editor"><i class="fa-solid fa-xmark"></i></button>
+<main class="site-main">
+  <div class="container">
+
+    <!-- ════════════════════════════════════════
+         PROFILE — edit this HTML directly
+         ════════════════════════════════════════ -->
+    <div class="profile-card">
+      <div class="avatar-col">
+        <!--
+          AVATAR: replace the initials below with an <img> tag pointing
+          to your photo, e.g.:
+          <img src="assets/photo.jpg" alt="Bidhan Pokhrel">
+          Or use a remote URL.
+        -->
+        <div class="avatar">BP</div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          Available for Projects
         </div>
       </div>
-      <div class="modal-body editor-body">
-        <input type="hidden" id="editing-post-id" value="">
-        <input type="hidden" id="editing-post-type" value="devlog">
 
-        <input type="text" id="post-title" class="editor-title-input" placeholder="Post title&#8230;" required>
-
-        <div class="editor-meta-row">
-          <input type="text" id="post-tags" class="form-input" style="flex:1;" placeholder="Tags: AI, Python, Data&#8230;">
-          <label class="btn btn--ghost btn--sm" for="post-cover-upload" style="cursor:pointer;">
-            <i class="fa-solid fa-image"></i> Cover
-            <input type="file" id="post-cover-upload" accept="image/*" hidden>
-          </label>
+      <div class="profile-info">
+        <div class="profile-tag">// DEVELOPER_PROFILE</div>
+        <h1 class="profile-name">Bidhan Pokhrel</h1>
+        <div class="profile-role">Data &amp; AI Engineer &middot; Solo Developer</div>
+        <p class="profile-bio">
+          Building intelligent systems and shipping production-grade AI products from Dubai.
+          Passionate about turning raw data into real-world impact — one model at a time.
+        </p>
+        <div class="profile-meta">
+          <span class="meta-chip"><i class="fa-solid fa-location-dot"></i> Dubai, UAE</span>
+          <span class="meta-chip"><i class="fa-solid fa-flag"></i> Built in Nepal 🇳🇵</span>
+          <span class="meta-chip"><i class="fa-solid fa-microchip"></i> 5+ Years Experience</span>
         </div>
-
-        <div id="cover-preview-wrap" class="cover-preview-wrap hidden">
-          <img id="cover-preview" src="" alt="Cover preview">
+        <div class="socials">
+          <a href="https://github.com/bidhanpokhrel"   class="social-a" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> GitHub</a>
+          <a href="https://linkedin.com/in/bidhanpokhrel" class="social-a" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i> LinkedIn</a>
+          <a href="https://twitter.com/bidhanpokhrel"  class="social-a" target="_blank" rel="noopener"><i class="fa-brands fa-x-twitter"></i> Twitter</a>
+          <a href="mailto:bidhan@example.com"           class="social-a"><i class="fa-solid fa-envelope"></i> Email</a>
         </div>
+      </div>
 
-        <!-- App fields -->
-        <div id="editor-app-fields" class="hidden" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-md);padding:1rem;">
-          <div class="form-grid">
-            <div class="form-group"><label class="form-label">Version</label><input type="text" id="app-version" class="form-input" placeholder="1.0.0"></div>
-            <div class="form-group"><label class="form-label">Platform</label><input type="text" id="app-platform" class="form-input" placeholder="iOS, Android, Web"></div>
-            <div class="form-group"><label class="form-label">App / Store URL</label><input type="url" id="app-link" class="form-input" placeholder="https://&#8230;"></div>
-            <div class="form-group"><label class="form-label">Privacy Policy URL</label><input type="url" id="app-privacy-url" class="form-input" placeholder="https://&#8230;"></div>
-            <div class="form-group form-group--full"><label class="form-label">Terms of Use URL</label><input type="url" id="app-terms-url" class="form-input" placeholder="https://&#8230;"></div>
-          </div>
-        </div>
-
-        <!-- Effects toolbar -->
-        <div class="effects-toolbar">
-          <span class="effects-label">FX:</span>
-          <button class="fx-btn" data-effect="neon-cyan">Cyan</button>
-          <button class="fx-btn" data-effect="neon-magenta">Pink</button>
-          <button class="fx-btn" data-effect="neon-green">Green</button>
-          <button class="fx-btn" data-effect="neon-orange">Orange</button>
-          <button class="fx-btn" data-effect="gradient-fire">&#128293; Fire</button>
-          <button class="fx-btn" data-effect="gradient-ocean">&#127754; Ocean</button>
-          <button class="fx-btn" data-effect="gradient-cyber">&#9889; Cyber</button>
-          <button class="fx-btn" data-effect="glitch">Glitch</button>
-          <button class="fx-btn" data-effect="pulse">Pulse</button>
-          <button class="fx-btn" data-effect="rainbow">Rainbow</button>
-          <button class="fx-btn" data-effect="code-inline">Code</button>
-          <button class="fx-btn" id="btn-remove-fx" style="color:var(--red);border-color:rgba(239,68,68,.3);">&#215; Clear</button>
-        </div>
-
-        <!-- Quill editor -->
-        <div class="editor-quill-wrap">
-          <div id="quill-toolbar">
-            <span class="ql-formats"><select class="ql-header"><option value="1">H1</option><option value="2">H2</option><option value="3">H3</option><option selected>Normal</option></select></span>
-            <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button><button class="ql-strike"></button></span>
-            <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-            <span class="ql-formats"><button class="ql-blockquote"></button><button class="ql-code-block"></button><button class="ql-link"></button></span>
-            <span class="ql-formats"><select class="ql-color"></select><select class="ql-background"></select></span>
-            <span class="ql-formats"><button class="ql-clean"></button></span>
-          </div>
-          <div id="quill-editor"></div>
+      <!-- Stats: auto-filled by JS from manifest.json -->
+      <div class="stats-col">
+        <div class="stat-box"><div class="stat-n" id="stat-posts">0</div><div class="stat-l">Posts</div></div>
+        <div class="stat-box"><div class="stat-n" id="stat-apps">0</div><div class="stat-l">Apps</div></div>
+        <div class="stat-box">
+          <!-- SKILLS COUNT: update the number to match your skills list below -->
+          <div class="stat-n">17</div><div class="stat-l">Skills</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- PROFILE SETTINGS MODAL -->
-  <div class="modal-overlay" id="modal-profile" role="dialog" aria-modal="true">
-    <div class="modal modal--lg">
-      <div class="modal-header">
-        <div class="modal-title-area">
-          <span class="modal-tag">// PROFILE_SETTINGS</span>
-          <h2 class="modal-title">Edit Profile</h2>
-        </div>
-        <button class="modal-close" data-close="modal-profile"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <form id="profile-form" novalidate>
-
-          <!-- Avatar -->
-          <div class="profile-form-avatar">
-            <div class="avatar-ring--sm">
-              <div class="avatar-circle" style="width:70px;height:70px;">
-                <img id="profile-form-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
-                <span id="profile-form-initials" style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--orange);">BP</span>
-              </div>
-            </div>
-            <div class="avatar-upload-controls">
-              <label class="btn btn--ghost btn--sm" for="avatar-file-upload" style="cursor:pointer;">
-                <i class="fa-solid fa-upload"></i> Upload Photo
-                <input type="file" id="avatar-file-upload" accept="image/*" hidden>
-              </label>
-              <button type="button" class="btn btn--ghost btn--sm" id="btn-remove-avatar"><i class="fa-solid fa-trash"></i> Remove</button>
-              <p class="input-hint">JPG / PNG / GIF</p>
-            </div>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group form-group--full"><label class="form-label">Full Name</label><input type="text" id="pf-name" class="form-input" placeholder="Your name" required></div>
-            <div class="form-group"><label class="form-label">Role / Title</label><input type="text" id="pf-role" class="form-input" placeholder="Data & AI Engineer"></div>
-            <div class="form-group"><label class="form-label">Location</label><input type="text" id="pf-location" class="form-input" placeholder="Dubai, UAE"></div>
-            <div class="form-group"><label class="form-label">Origin</label><input type="text" id="pf-origin" class="form-input" placeholder="Built in Nepal 🇳🇵"></div>
-            <div class="form-group"><label class="form-label">Experience</label><input type="text" id="pf-experience" class="form-input" placeholder="5+ Years"></div>
-            <div class="form-group"><label class="form-label">Status Badge</label><input type="text" id="pf-status" class="form-input" placeholder="Available for Projects"></div>
-            <div class="form-group">
-              <label class="form-label">Status Indicator</label>
-              <label class="toggle-label"><input type="checkbox" id="pf-status-active" checked><span class="toggle-track"></span><span class="toggle-text">Show green pulse dot</span></label>
-            </div>
-            <div class="form-group form-group--full"><label class="form-label">Footer Tagline</label><input type="text" id="pf-tagline" class="form-input" placeholder="Crafting the future..."></div>
-            <div class="form-group form-group--full"><label class="form-label">Bio</label><textarea id="pf-bio" class="form-input" rows="3" placeholder="Tell the world about yourself..."></textarea></div>
-
-            <div class="form-section-divider form-group--full">// SOCIAL_LINKS</div>
-            <div class="form-group"><label class="form-label"><i class="fa-brands fa-github"></i> GitHub URL</label><input type="url" id="pf-github" class="form-input" placeholder="https://github.com/username"></div>
-            <div class="form-group"><label class="form-label"><i class="fa-brands fa-linkedin"></i> LinkedIn URL</label><input type="url" id="pf-linkedin" class="form-input" placeholder="https://linkedin.com/in/username"></div>
-            <div class="form-group"><label class="form-label"><i class="fa-brands fa-x-twitter"></i> Twitter URL</label><input type="url" id="pf-twitter" class="form-input" placeholder="https://x.com/username"></div>
-            <div class="form-group"><label class="form-label"><i class="fa-solid fa-envelope"></i> Email</label><input type="email" id="pf-email" class="form-input" placeholder="you@email.com"></div>
-            <div class="form-group"><label class="form-label"><i class="fa-solid fa-globe"></i> Website URL</label><input type="url" id="pf-website" class="form-input" placeholder="https://yoursite.com"></div>
-
-            <div class="form-section-divider form-group--full">// TECH_SKILLS</div>
-            <div class="form-group form-group--full">
-              <label class="form-label">Skills (comma-separated)</label>
-              <textarea id="pf-skills" class="form-input" rows="2" placeholder="Python, TensorFlow, SQL, Azure, Docker, ..."></textarea>
-              <p class="input-hint">These fill the animated skills marquee.</p>
-            </div>
-
-            <div class="form-section-divider form-group--full">// GITHUB_SYNC — store posts &amp; profile in your repo</div>
-            <div class="form-group form-group--full"><div id="gh-sync-status" class="sync-status-badge"></div></div>
-            <div class="form-group"><label class="form-label">GitHub Username</label><input type="text" id="gh-owner" class="form-input" placeholder="bidhanpokhrel" autocomplete="off"></div>
-            <div class="form-group"><label class="form-label">Repository Name</label><input type="text" id="gh-repo" class="form-input" placeholder="bidhan-pokhrel.github.io" autocomplete="off"></div>
-            <div class="form-group"><label class="form-label">Branch</label><input type="text" id="gh-branch" class="form-input" placeholder="main" autocomplete="off"></div>
-            <div class="form-group">
-              <label class="form-label">Personal Access Token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Portfolio+Sync" target="_blank" rel="noopener" class="form-label-link">Create &#8599;</a></label>
-              <input type="password" id="gh-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-              <p class="input-hint">Needs <code>repo</code> scope. Stored in your browser only.</p>
-            </div>
-            <div class="form-group form-group--full">
-              <button type="button" class="btn btn--ghost btn--sm" id="btn-test-github"><i class="fa-solid fa-plug"></i> Test Connection</button>
-              <span id="gh-test-result" class="gh-test-result" style="margin-left:.75rem;"></span>
-            </div>
-
-            <div class="form-section-divider form-group--full">// SECURITY — leave blank to keep current credentials</div>
-            <div class="form-group"><label class="form-label">New Username</label><input type="text" id="pf-new-username" class="form-input" placeholder="Leave blank to keep current" autocomplete="off"></div>
-            <div class="form-group"><label class="form-label">New Password</label><input type="password" id="pf-new-password" class="form-input" placeholder="Leave blank to keep current" autocomplete="new-password"></div>
-            <div class="form-group form-group--full">
-              <label class="form-label">Current Password <em style="font-weight:400;">(required only if changing credentials)</em></label>
-              <input type="password" id="pf-current-password" class="form-input" placeholder="Enter current password to confirm" autocomplete="current-password">
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn btn--ghost" data-close="modal-profile">Cancel</button>
-            <button type="submit" class="btn btn--primary" id="btn-save-profile"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- POST VIEW MODAL -->
-  <div class="modal-overlay" id="modal-post-view" role="dialog" aria-modal="true">
-    <div class="modal modal--reading">
-      <div class="modal-header">
-        <div class="post-view-header-left">
-          <span class="modal-tag" id="post-view-tag">// DEV_LOG</span>
-        </div>
-        <div class="post-view-header-right">
-          <div class="post-view-admin admin-only hidden">
-            <button class="btn btn--ghost btn--sm" id="btn-edit-current-post"><i class="fa-solid fa-pen"></i> Edit</button>
-            <button class="btn btn--danger btn--sm" id="btn-delete-current-post"><i class="fa-solid fa-trash"></i> Delete</button>
-          </div>
-          <button class="modal-close" data-close="modal-post-view"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-      </div>
-      <div class="modal-body">
-        <div id="post-view-cover" class="post-view-cover hidden">
-          <img id="post-view-cover-img" src="" alt="">
-        </div>
-        <div id="view-app-info" class="view-app-info hidden"></div>
-        <h1 class="post-view-title" id="post-view-title"></h1>
-        <div class="post-view-meta">
-          <span class="post-view-date post-date" id="post-view-date"></span>
-          <div class="post-tags" id="post-view-tags"></div>
-        </div>
-        <div class="post-body ql-editor" id="post-view-body"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONFIRM DELETE MODAL -->
-  <div class="modal-overlay" id="modal-confirm" role="dialog" aria-modal="true">
-    <div class="modal modal--sm modal--danger">
-      <div class="modal-header">
-        <div class="modal-title-area"><h2 class="modal-title">Confirm Delete</h2></div>
-        <button class="modal-close" data-close="modal-confirm"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body confirm-body">
-        <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <p id="confirm-message">Are you sure?</p>
-        <div class="confirm-actions">
-          <button class="btn btn--ghost" id="btn-confirm-cancel">Cancel</button>
-          <button class="btn btn--danger" id="btn-confirm-ok"><i class="fa-solid fa-trash"></i> Delete</button>
+    <!-- ════════════════════════════════════════
+         SKILLS — edit the list below directly
+         ════════════════════════════════════════ -->
+    <div class="skills-strip">
+      <div class="strip-label">// TECH_STACK</div>
+      <div class="marquee">
+        <div class="marquee-track">
+          <!-- Copy 1 -->
+          <div class="marquee-copy" id="skills-a"></div>
+          <!-- Copy 2 (identical — needed for seamless loop) -->
+          <div class="marquee-copy" id="skills-b"></div>
         </div>
       </div>
     </div>
+
+    <!-- ════════════════════════════════════════
+         POSTS — auto-loaded from posts/manifest.json
+         ════════════════════════════════════════ -->
+    <div>
+      <!-- Dev Log tab -->
+      <div class="tab-pane active" id="tab-devlog">
+        <div class="section-hdr">
+          <div>
+            <div class="section-tag">// DEV_LOG</div>
+            <h2 class="section-h">What I'm Building</h2>
+            <p class="section-sub">Projects, experiments &amp; development updates</p>
+          </div>
+        </div>
+        <div class="posts-grid" id="grid-devlog">
+          <div class="loading-cards">
+            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apps tab -->
+      <div class="tab-pane" id="tab-apps">
+        <div class="section-hdr">
+          <div>
+            <div class="section-tag">// PUBLISHED_APPS</div>
+            <h2 class="section-h">My Applications</h2>
+            <p class="section-sub">Apps I've built and shipped</p>
+          </div>
+        </div>
+        <div class="posts-grid" id="grid-apps">
+          <div class="loading-cards">
+            <div class="skeleton"></div><div class="skeleton"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
+</main>
 
-  <!-- GitHub sync indicator -->
-  <div id="gh-sync-indicator" class="hidden">&#8635; Synced from GitHub</div>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>[BP] &copy; <span id="fy"></span> Bidhan Pokhrel</span>
+    <span>Built in Nepal 🇳🇵</span>
+    <span style="display:flex;align-items:center;gap:.4rem;">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;"></span>
+      Online
+    </span>
+  </div>
+</footer>
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-  <script src="github-storage.js"></script>
-  <script src="auth.js"></script>
-  <script src="profile.js"></script>
-  <script src="editor.js"></script>
-  <script src="posts.js"></script>
-  <script src="app.js"></script>
+<div id="toast-container"></div>
 
-  <!-- BULLETPROOF LOGIN FALLBACK -->
-  <script>
-    function toggleLogin() {
-      if (typeof AuthManager !== 'undefined' && AuthManager.isLoggedIn()) {
-        AuthManager.logout();
-        if (typeof _deactivateAdminMode === 'function') _deactivateAdminMode();
-        if (typeof showToast === 'function') showToast('Logged out.', 'info');
-      } else {
-        var m = document.getElementById('modal-login');
-        if (m) m.classList.add('active');
-        setTimeout(function(){ var u = document.getElementById('login-username'); if(u) u.focus(); }, 80);
-      }
-    }
-  </script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// SKILLS  — edit this array to change your skills marquee
+// ═══════════════════════════════════════════════════════════
+const SKILLS = [
+  'Python', 'Machine Learning', 'Deep Learning', 'NLP', 'LLMs',
+  'LangChain', 'Vector DBs', 'FastAPI', 'Docker', 'Kubernetes',
+  'PostgreSQL', 'MongoDB', 'React', 'TypeScript', 'Git', 'Azure', 'AWS'
+];
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+document.getElementById('fy').textContent = new Date().getFullYear();
+buildMarquee();
+loadPosts();
+
+// ── Nav tab switching ──────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab)?.classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// MARQUEE
+// ═══════════════════════════════════════════════════════════
+function buildMarquee() {
+  const html = SKILLS.map(s => `<span class="skill-pill">${s}</span>`).join('');
+  document.getElementById('skills-a').innerHTML = html;
+  document.getElementById('skills-b').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD POSTS FROM manifest.json
+// ═══════════════════════════════════════════════════════════
+async function loadPosts() {
+  try {
+    // Cache-bust so visitors always see the latest manifest
+    const res = await fetch('posts/manifest.json?v=' + Date.now());
+    if (!res.ok) throw new Error('manifest not found');
+    const posts = await res.json();
+
+    const devlog = posts.filter(p => p.type === 'devlog' || !p.type);
+    const apps   = posts.filter(p => p.type === 'app');
+
+    renderGrid('grid-devlog', devlog);
+    renderGrid('grid-apps',   apps);
+
+    // Update stat counters
+    document.getElementById('stat-posts').textContent = devlog.length;
+    document.getElementById('stat-apps').textContent  = apps.length;
+
+  } catch (err) {
+    // If manifest missing (e.g. fresh repo), show empty state gracefully
+    renderGrid('grid-devlog', []);
+    renderGrid('grid-apps',   []);
+    console.warn('Could not load posts/manifest.json:', err.message);
+  }
+}
+
+// ── Render a grid of post cards ────────────────────────────
+function renderGrid(gridId, posts) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+
+  if (!posts.length) {
+    grid.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon"><i class="fa-solid fa-code"></i></div>
+        <h3>Nothing here yet</h3>
+        <p>Add a post to <code>posts/manifest.json</code> to get started.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = posts.map(post => `
+    <a href="posts/${esc(post.file)}"
+       class="post-card ${post.type === 'app' ? 'app-card' : ''}"
+       aria-label="${esc(post.title)}">
+      ${post.cover ? `<div class="card-cover"><img src="${esc(post.cover)}" alt="" loading="lazy"></div>` : ''}
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="card-date">${fmtDate(post.date)}</span>
+          ${post.type === 'app' ? '<span class="tag" style="background:rgba(59,130,246,.1);color:var(--blue);">App</span>' : ''}
+        </div>
+        <div class="card-title">${esc(post.title)}</div>
+        <p class="card-excerpt">${esc(post.excerpt || '')}</p>
+        ${post.tags?.length ? `<div class="tags">${post.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      </div>
+    </a>`).join('');
+}
+
+// ── Helpers ─────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); }
+  catch { return d; }
+}
+
+function toast(msg, type) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast t-' + (type || 'info');
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+</script>
 
 </body>
 </html>
