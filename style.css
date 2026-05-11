@@ -91,7 +91,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .skills-strip{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:.9rem 1.4rem;margin-bottom:1.5rem;overflow:hidden}
 .strip-label{font-family:var(--mono);font-size:.62rem;color:var(--t3);letter-spacing:.1em;margin-bottom:.55rem}
 .marquee{overflow:hidden}
-.marquee-track{display:flex;animation:scroll 60s linear infinite;width:max-content}
+.marquee-track{display:flex;animation:scroll 120s linear infinite;width:max-content}
 .marquee-track:hover{animation-play-state:paused}
 .marquee-copy{display:flex;gap:.45rem;padding-right:.45rem}
 .skill-pill{display:inline-flex;padding:.26rem .7rem;background:var(--card);border:1px solid var(--border);border-radius:100px;font-size:.73rem;font-weight:500;color:var(--t2);white-space:nowrap;transition:all var(--tr)}
