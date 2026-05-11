@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bidhan Pokhrel — Data & AI Engineer, Solo Developer. Building intelligent systems in Dubai, UAE.">
+  <meta name="author" content="Bidhan Pokhrel">
+  <meta property="og:title" content="Bidhan Pokhrel — Data & AI Engineer">
+  <meta property="og:description" content="Personal developer portal. Data, AI, and solo-built products.">
+
+  <title>Bidhan Pokhrel — Data &amp; AI Engineer</title>
+
+  <!-- ── FONTS ── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!--
+    Space Mono  → headings, code, logo (terminal/tech feel)
+    Syne        → body, UI elements (modern, futuristic)
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ── ICONS ── -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- ── QUILL RICH TEXT EDITOR (CSS) ── -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+  <!-- ── OUR STYLES (effects before style so style can override) ── -->
+  <link rel="stylesheet" href="effects.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════
+       BACKGROUND LAYERS  (decorative, aria-hidden)
+       Layers: grid dots → radial glow → scanlines overlay
+       ═══════════════════════════════════════════════════ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow--top"></div>
+    <div class="bg-glow bg-glow--bottom"></div>
+    <div class="bg-scanlines"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TOAST NOTIFICATION
+       Shown/hidden via JS — displays success / error / info
+       ═══════════════════════════════════════════════════ -->
+  <div id="toast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+    <i id="toast-icon" class="toast-icon"></i>
+    <span id="toast-message">Message</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       SITE HEADER
+       Logo | Nav tabs | Login / Admin controls
+       ═══════════════════════════════════════════════════ -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner container">
+
+      <!-- Logo: stylised [BP] bracket mark -->
+      <div class="site-logo" aria-label="Bidhan Pokhrel">
+        <span class="logo-bracket">[</span>
+        <span class="logo-name" data-text="BP">BP</span>
+        <span class="logo-bracket">]</span>
+      </div>
+
+      <!-- Main tab navigation — Dev Log and Published Apps -->
+      <nav class="main-nav" role="navigation" aria-label="Main">
+        <button class="nav-tab active" data-tab="devlog" aria-selected="true">
+          <i class="fa-solid fa-terminal nav-icon" aria-hidden="true"></i>
+          Dev Log
+          <span class="nav-indicator" aria-hidden="true"></span>
+        </button>
+        <button class="nav-tab" data-tab="apps" aria-selected="false">
+          <i class="fa-solid fa-rocket nav-icon" aria-hidden="true"></i>
+          Published Apps
+          <span class="nav-indicator" aria-hidden="true"></span>
+        </button>
+      </nav>
+
+      <!-- Right-side controls — some visible only when logged in (.admin-only) -->
+      <div class="header-controls">
+        <!-- New Post: appears after login -->
+        <button class="btn btn--ghost btn--sm admin-only hidden" id="btn-new-post">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          <span>New Post</span>
+        </button>
+
+        <!-- Settings gear: appears after login -->
+        <button class="btn btn--icon admin-only hidden" id="btn-settings"
+                title="Profile & Site Settings" aria-label="Settings">
+          <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </button>
+
+        <!-- Login toggle (changes to "Logout" when authenticated) -->
+        <button class="btn btn--login" id="btn-login-toggle">
+          <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+          <span id="login-btn-text">Login</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════ -->
+  <main class="site-main" id="main-content">
+    <div class="container">
+
+      <!-- ────────────────────────────────────────────────
+           PROFILE / HERO SECTION
+           Shows avatar, bio, social links, skills marquee
+           ──────────────────────────────────────────────── -->
+      <section class="profile-section" id="profile-section" aria-label="Developer profile">
+
+        <div class="profile-card">
+          <!-- Corner decorations (CSS-drawn ╔ ╗ ╚ ╝) -->
+          <div class="card-corner card-corner--tl" aria-hidden="true"></div>
+          <div class="card-corner card-corner--tr" aria-hidden="true"></div>
+          <div class="card-corner card-corner--bl" aria-hidden="true"></div>
+          <div class="card-corner card-corner--br" aria-hidden="true"></div>
+
+          <div class="profile-layout">
+
+            <!-- Avatar with animated ring and status badge -->
+            <div class="profile-avatar-wrap">
+              <div class="avatar-ring">
+                <div class="avatar-ring-inner">
+                  <!--
+                    If no photo is set, onerror hides the img and shows
+                    the initials fallback div instead.
+                  -->
+                  <img id="profile-avatar-img" src="" alt="Bidhan Pokhrel"
+                       class="profile-avatar"
+                       onerror="this.style.display='none';document.getElementById('avatar-fallback').style.display='flex'">
+                  <div id="avatar-fallback" class="avatar-fallback">
+                    <span id="avatar-initials">BP</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Green pulsing availability badge -->
+              <div class="status-badge">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="profile-status">Available</span>
+              </div>
+            </div>
+
+            <!-- Profile text info -->
+            <div class="profile-info">
+              <div class="profile-label" aria-hidden="true">// DEVELOPER_PROFILE</div>
+              <h1 class="profile-name" id="profile-name">BIDHAN POKHREL</h1>
+              <div class="profile-role">
+                <span class="role-prefix" aria-hidden="true">&gt; </span>
+                <span id="profile-role-text">Data &amp; AI Engineer</span>
+              </div>
+              <p class="profile-bio" id="profile-bio">
+                Building intelligent systems at the intersection of data and AI.
+                Solo developer with a passion for creating meaningful products.
+                Turning complex data into actionable insights, one model at a time.
+              </p>
+
+              <!-- Location / origin / experience chips -->
+              <div class="profile-meta">
+                <span class="meta-item">
+                  <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                  <span id="profile-location">Dubai, UAE</span>
+                </span>
+                <span class="meta-item">
+                  <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                  <span id="profile-origin">Built in Nepal 🇳🇵</span>
+                </span>
+                <span class="meta-item">
+                  <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                  <span id="profile-experience">5+ Years Experience</span>
+                </span>
+              </div>
+
+              <!-- Social links row — hrefs set by profile.js from localStorage -->
+              <div class="social-links" id="social-links" aria-label="Social links">
+                <a href="#" class="social-link" id="social-github"
+                   target="_blank" rel="noopener noreferrer" title="GitHub">
+                  <i class="fa-brands fa-github" aria-hidden="true"></i>
+                </a>
+                <a href="#" class="social-link" id="social-linkedin"
+                   target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                  <i class="fa-brands fa-linkedin-in" aria-hidden="true"></i>
+                </a>
+                <a href="#" class="social-link" id="social-twitter"
+                   target="_blank" rel="noopener noreferrer" title="Twitter / X">
+                  <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+                </a>
+                <a href="#" class="social-link" id="social-email"
+                   target="_blank" rel="noopener noreferrer" title="Email">
+                  <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                </a>
+              </div>
+            </div>
+
+            <!-- Right-side numeric stats panel -->
+            <div class="profile-stats" aria-label="Stats">
+              <div class="stat-item">
+                <span class="stat-value" id="stat-posts">0</span>
+                <span class="stat-label">Posts</span>
+              </div>
+              <div class="stat-divider" aria-hidden="true"></div>
+              <div class="stat-item">
+                <span class="stat-value" id="stat-apps">0</span>
+                <span class="stat-label">Apps</span>
+              </div>
+              <div class="stat-divider" aria-hidden="true"></div>
+              <div class="stat-item">
+                <span class="stat-value" id="stat-skills">0</span>
+                <span class="stat-label">Skills</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Profile button — only visible when logged in -->
+          <button class="btn btn--ghost btn--sm admin-only hidden profile-edit-btn"
+                  id="btn-edit-profile">
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+            Edit Profile
+          </button>
+        </div>
+
+        <!-- Continuous scrolling skills / tech-stack marquee -->
+        <div class="skills-marquee" aria-label="Technology stack">
+          <div class="marquee-track" aria-hidden="true">
+            <!-- Two identical copies so the scroll loops seamlessly -->
+            <div class="marquee-content" id="skills-marquee-1"></div>
+            <div class="marquee-content" id="skills-marquee-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ────────────────────────────────────────────────
+           CONTENT SECTION — tab panels
+           ──────────────────────────────────────────────── -->
+      <section class="content-section" id="content-section">
+
+        <!-- ── TAB: DEV LOG ── -->
+        <div class="tab-pane active" id="tab-devlog"
+             role="tabpanel" aria-label="Dev Log tab">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-tag" aria-hidden="true">// DEV_LOG</span>
+              <h2>What I'm Building</h2>
+              <p class="section-desc">Current projects, experiments &amp; development updates</p>
+            </div>
+            <!-- Admin: shown when logged in -->
+            <button class="btn btn--primary admin-only hidden" id="btn-new-devlog">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> New Entry
+            </button>
+          </div>
+
+          <!-- Posts grid — populated by posts.js -->
+          <div class="posts-grid" id="devlog-posts-grid">
+            <!-- Empty state (hidden when posts exist) -->
+            <div class="posts-empty" id="devlog-empty">
+              <div class="empty-icon"><i class="fa-solid fa-code" aria-hidden="true"></i></div>
+              <p class="empty-title">No dev log entries yet.</p>
+              <p class="empty-sub">Log in to post your first development update.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB: PUBLISHED APPS ── -->
+        <div class="tab-pane" id="tab-apps"
+             role="tabpanel" aria-label="Published Apps tab">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="section-tag" aria-hidden="true">// PUBLISHED_APPS</span>
+              <h2>My Applications</h2>
+              <p class="section-desc">Apps I've built and shipped to the world</p>
+            </div>
+            <!-- Admin: shown when logged in -->
+            <button class="btn btn--primary admin-only hidden" id="btn-new-app">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> Add App
+            </button>
+          </div>
+
+          <!-- Apps grid — populated by posts.js -->
+          <div class="apps-grid" id="apps-grid">
+            <!-- Empty state (hidden when apps exist) -->
+            <div class="posts-empty" id="apps-empty">
+              <div class="empty-icon"><i class="fa-solid fa-rocket" aria-hidden="true"></i></div>
+              <p class="empty-title">No published apps yet.</p>
+              <p class="empty-sub">Log in to add your first published application.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /container -->
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════
+       FOOTER
+       Year auto-updates via JS. "Built in Nepal" is hardcoded
+       as a permanent attribution line.
+       ═══════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <span class="footer-logo" aria-hidden="true">[BP]</span>
+        <span class="footer-sep" aria-hidden="true">//</span>
+        <span id="footer-tagline">Data &amp; AI Engineer</span>
+      </div>
+      <div class="footer-center">
+        <!--
+          Year is inserted by JS: document.getElementById('footer-year').textContent = new Date().getFullYear()
+          This ensures it always shows the correct year without any manual update.
+        -->
+        <p class="footer-copy">
+          &copy; <span id="footer-year"></span> Bidhan Pokhrel.
+          Built in Nepal 🇳🇵.
+          All rights reserved.
+        </p>
+      </div>
+      <div class="footer-right">
+        <span class="footer-status-text">
+          <span class="status-dot status-dot--footer" aria-hidden="true"></span>
+          System Online
+        </span>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       MODALS
+       All modals use .modal-overlay as backdrop.
+       JS adds/removes .is-open to show/hide them.
+       ═══════════════════════════════════════════════════ -->
+
+  <!-- ── MODAL: LOGIN ────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-login"
+       role="dialog" aria-modal="true" aria-labelledby="modal-login-title">
+    <div class="modal modal--sm">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <span class="modal-tag" aria-hidden="true">// SECURE_ACCESS</span>
+          <h2 class="modal-title" id="modal-login-title">Admin Login</h2>
+        </div>
+        <button class="modal-close" data-close="modal-login" aria-label="Close login dialog">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-username" class="form-label">Username</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-user input-icon" aria-hidden="true"></i>
+              <input type="text" id="login-username" class="form-input"
+                     placeholder="Enter username" autocomplete="username" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock input-icon" aria-hidden="true"></i>
+              <input type="password" id="login-password" class="form-input"
+                     placeholder="Enter password" autocomplete="current-password" required>
+              <!-- Toggle password visibility -->
+              <button type="button" class="input-toggle-pw"
+                      id="toggle-password" aria-label="Toggle password visibility">
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Error message area (hidden until a bad login) -->
+          <div id="login-error" class="form-error hidden" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span id="login-error-msg">Invalid credentials. Please try again.</span>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full" id="btn-do-login">
+            <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+            Access Portal
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: POST / APP EDITOR ────────────────────── -->
+  <!--
+    This single modal handles both Dev Log posts and Published Apps.
+    The #editing-post-type hidden input tells editor.js which to save.
+    App-specific fields are shown/hidden by toggling .hidden on #editor-app-fields.
+  -->
+  <div class="modal-overlay" id="modal-editor"
+       role="dialog" aria-modal="true" aria-labelledby="modal-editor-title">
+    <div class="modal modal--full">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <span class="modal-tag" id="editor-modal-tag" aria-hidden="true">// NEW_POST</span>
+          <h2 class="modal-title" id="modal-editor-title">Create Post</h2>
+        </div>
+        <div class="editor-header-controls">
+          <button class="btn btn--ghost btn--sm" id="btn-save-draft">
+            <i class="fa-regular fa-floppy-disk" aria-hidden="true"></i> Save Draft
+          </button>
+          <button class="btn btn--primary btn--sm" id="btn-publish-post">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+            <span id="publish-btn-text">Publish</span>
+          </button>
+          <button class="modal-close" data-close="modal-editor" aria-label="Close editor">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-body editor-body">
+        <!-- Hidden state fields -->
+        <input type="hidden" id="editing-post-id" value="">
+        <input type="hidden" id="editing-post-type" value="devlog">
+
+        <!-- Post title (large, prominent) -->
+        <input type="text" id="post-title" class="editor-title-input"
+               placeholder="Post title..." aria-label="Post title" required>
+
+        <!-- Tags + cover image row -->
+        <div class="editor-meta-row">
+          <div class="editor-tags-wrap">
+            <i class="fa-solid fa-tags" aria-hidden="true"></i>
+            <input type="text" id="post-tags" class="editor-tags-input"
+                   placeholder="Tags (comma-separated): AI, Python, Data..."
+                   aria-label="Tags">
+          </div>
+
+          <!--
+            Extra fields for Published Apps.
+            Shown only when editing-post-type === 'app'
+          -->
+          <div class="editor-app-fields hidden" id="editor-app-fields">
+            <input type="text" id="app-version" class="editor-meta-input"
+                   placeholder="Version: 1.0.0">
+            <input type="text" id="app-platform" class="editor-meta-input"
+                   placeholder="Platform: iOS, Android, Web">
+            <input type="url" id="app-link" class="editor-meta-input"
+                   placeholder="App / Store URL">
+            <input type="url" id="app-privacy-url" class="editor-meta-input"
+                   placeholder="Privacy Policy URL">
+            <input type="url" id="app-terms-url" class="editor-meta-input"
+                   placeholder="Terms of Use URL">
+          </div>
+
+          <!-- Cover image upload -->
+          <div class="editor-cover-wrap">
+            <label class="btn btn--ghost btn--sm" for="post-cover-upload">
+              <i class="fa-solid fa-image" aria-hidden="true"></i>
+              Cover Image
+              <input type="file" id="post-cover-upload" accept="image/*" hidden>
+            </label>
+            <span id="cover-filename" class="cover-filename"></span>
+            <button type="button" class="btn btn--icon btn--sm hidden"
+                    id="btn-remove-cover" aria-label="Remove cover image">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cover image preview strip -->
+        <div id="cover-preview-wrap" class="cover-preview-wrap hidden">
+          <img id="cover-preview" src="" alt="Cover preview" class="cover-preview">
+        </div>
+
+        <!-- ── EFFECTS TOOLBAR ──
+             Buttons that wrap selected Quill text in a styled <span class="fx-*">
+             Each data-effect maps to a CSS class in effects.css
+        ─────────────────────────────────────────────────────────── -->
+        <div class="effects-toolbar" id="effects-toolbar" aria-label="Text effects">
+          <span class="fx-toolbar-label" aria-hidden="true">// FX:</span>
+
+          <!-- Neon glow group -->
+          <div class="fx-group">
+            <span class="fx-group-label">Neon</span>
+            <button class="fx-btn fx-btn--neon-cyan" data-effect="neon-cyan" title="Neon Cyan glow">CYAN</button>
+            <button class="fx-btn fx-btn--neon-magenta" data-effect="neon-magenta" title="Neon Magenta glow">PINK</button>
+            <button class="fx-btn fx-btn--neon-green" data-effect="neon-green" title="Neon Green glow">GREEN</button>
+            <button class="fx-btn fx-btn--neon-blue" data-effect="neon-blue" title="Neon Blue glow">BLUE</button>
+            <button class="fx-btn fx-btn--neon-orange" data-effect="neon-orange" title="Neon Orange glow">ORANGE</button>
+          </div>
+
+          <!-- Gradient text group -->
+          <div class="fx-group">
+            <span class="fx-group-label">Gradient</span>
+            <button class="fx-btn fx-btn--gradient-fire" data-effect="gradient-fire" title="Fire gradient">FIRE</button>
+            <button class="fx-btn fx-btn--gradient-ocean" data-effect="gradient-ocean" title="Ocean gradient">OCEAN</button>
+            <button class="fx-btn fx-btn--gradient-aurora" data-effect="gradient-aurora" title="Aurora gradient">AURORA</button>
+            <button class="fx-btn fx-btn--gradient-cyber" data-effect="gradient-cyber" title="Cyber gradient">CYBER</button>
+          </div>
+
+          <!-- Animation group -->
+          <div class="fx-group">
+            <span class="fx-group-label">Animate</span>
+            <button class="fx-btn fx-btn--glitch" data-effect="glitch" title="Glitch animation">GLITCH</button>
+            <button class="fx-btn fx-btn--pulse" data-effect="pulse" title="Pulse glow">PULSE</button>
+            <button class="fx-btn fx-btn--rainbow" data-effect="rainbow" title="Rainbow animation">RAINBOW</button>
+            <button class="fx-btn fx-btn--float" data-effect="float" title="Float animation">FLOAT</button>
+          </div>
+
+          <!-- Style group -->
+          <div class="fx-group">
+            <span class="fx-group-label">Style</span>
+            <button class="fx-btn fx-btn--highlight-cyber" data-effect="highlight-cyber" title="Cyber highlight">HIGHLIGHT</button>
+            <button class="fx-btn fx-btn--text-shadow-hard" data-effect="text-shadow-hard" title="Hard drop shadow">SHADOW</button>
+            <button class="fx-btn fx-btn--code-inline" data-effect="code-inline" title="Inline code style">CODE</button>
+          </div>
+
+          <!-- Remove all effects from selection -->
+          <button class="fx-btn fx-btn--remove" id="btn-remove-fx" title="Remove effects from selection">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i> CLEAR
+          </button>
+        </div>
+
+        <!-- ── QUILL EDITOR ──
+             Custom toolbar (#quill-toolbar) + content area (#quill-editor)
+             Quill is initialised in editor.js with toolbar option pointing here
+        ─────────────────────────────────────────────────────────────────── -->
+        <div class="quill-wrap">
+          <div id="quill-toolbar">
+            <span class="ql-formats">
+              <select class="ql-header">
+                <option value="1">Heading 1</option>
+                <option value="2">Heading 2</option>
+                <option value="3">Heading 3</option>
+                <option selected>Normal</option>
+              </select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-bold" title="Bold"></button>
+              <button class="ql-italic" title="Italic"></button>
+              <button class="ql-underline" title="Underline"></button>
+              <button class="ql-strike" title="Strikethrough"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-list" value="ordered" title="Ordered list"></button>
+              <button class="ql-list" value="bullet" title="Bullet list"></button>
+              <button class="ql-indent" value="-1" title="Decrease indent"></button>
+              <button class="ql-indent" value="+1" title="Increase indent"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-blockquote" title="Blockquote"></button>
+              <button class="ql-code-block" title="Code block"></button>
+              <button class="ql-link" title="Insert link"></button>
+              <button class="ql-image" title="Insert image"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-align" value="" title="Align left"></button>
+              <button class="ql-align" value="center" title="Centre"></button>
+              <button class="ql-align" value="right" title="Align right"></button>
+            </span>
+            <span class="ql-formats">
+              <select class="ql-color" title="Text colour"></select>
+              <select class="ql-background" title="Background colour"></select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-clean" title="Remove formatting"></button>
+            </span>
+          </div>
+          <div id="quill-editor" aria-label="Post content editor"></div>
+        </div>
+
+      </div><!-- /editor-body -->
+    </div><!-- /modal -->
+  </div>
+
+  <!-- ── MODAL: PROFILE SETTINGS ─────────────────────── -->
+  <!--
+    All fields map to the profile data object in localStorage.
+    Security section (username/password change) requires current password.
+  -->
+  <div class="modal-overlay" id="modal-profile"
+       role="dialog" aria-modal="true" aria-labelledby="modal-profile-title">
+    <div class="modal modal--lg">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <span class="modal-tag" aria-hidden="true">// PROFILE_SETTINGS</span>
+          <h2 class="modal-title" id="modal-profile-title">Edit Profile</h2>
+        </div>
+        <button class="modal-close" data-close="modal-profile" aria-label="Close profile settings">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="profile-form" novalidate>
+
+          <!-- Avatar upload area -->
+          <div class="profile-form-avatar">
+            <div class="avatar-ring avatar-ring--sm">
+              <div class="avatar-ring-inner">
+                <img id="profile-form-avatar-img" src="" alt=""
+                     class="profile-avatar"
+                     onerror="this.style.display='none';document.getElementById('profile-form-fallback').style.display='flex'">
+                <div id="profile-form-fallback" class="avatar-fallback">
+                  <span id="profile-form-initials">BP</span>
+                </div>
+              </div>
+            </div>
+            <div class="avatar-upload-controls">
+              <label class="btn btn--ghost btn--sm" for="avatar-file-upload">
+                <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                Upload Photo
+                <input type="file" id="avatar-file-upload" accept="image/*" hidden>
+              </label>
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-remove-avatar">
+                <i class="fa-solid fa-trash" aria-hidden="true"></i> Remove
+              </button>
+              <p class="input-hint">JPG / PNG / GIF — stored as base64 in browser localStorage</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <!-- Basic info -->
+            <div class="form-group form-group--full">
+              <label for="pf-name" class="form-label">Full Name</label>
+              <input type="text" id="pf-name" class="form-input" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+              <label for="pf-role" class="form-label">Role / Title</label>
+              <input type="text" id="pf-role" class="form-input" placeholder="Data & AI Engineer">
+            </div>
+            <div class="form-group">
+              <label for="pf-location" class="form-label">Location</label>
+              <input type="text" id="pf-location" class="form-input" placeholder="Dubai, UAE">
+            </div>
+            <div class="form-group">
+              <label for="pf-origin" class="form-label">Origin / "Built in"</label>
+              <input type="text" id="pf-origin" class="form-input" placeholder="Built in Nepal 🇳🇵">
+            </div>
+            <div class="form-group">
+              <label for="pf-experience" class="form-label">Experience</label>
+              <input type="text" id="pf-experience" class="form-input" placeholder="5+ Years Experience">
+            </div>
+            <div class="form-group">
+              <label for="pf-status" class="form-label">Status Badge</label>
+              <input type="text" id="pf-status" class="form-input" placeholder="Available / Open to Work / Building...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status Indicator</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="pf-status-active" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-text">Show green pulse dot</span>
+              </label>
+            </div>
+            <div class="form-group form-group--full">
+              <label for="pf-tagline" class="form-label">Footer Tagline</label>
+              <input type="text" id="pf-tagline" class="form-input" placeholder="Crafting the future, one commit at a time.">
+            </div>
+            <div class="form-group form-group--full">
+              <label for="pf-bio" class="form-label">Bio</label>
+              <textarea id="pf-bio" class="form-input form-textarea" rows="3"
+                        placeholder="Tell the world about yourself..."></textarea>
+            </div>
+
+            <!-- Social links -->
+            <div class="form-section-divider form-group--full">
+              <span>// SOCIAL LINKS</span>
+            </div>
+            <div class="form-group">
+              <label for="pf-github" class="form-label">
+                <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub URL
+              </label>
+              <input type="url" id="pf-github" class="form-input"
+                     placeholder="https://github.com/username">
+            </div>
+            <div class="form-group">
+              <label for="pf-linkedin" class="form-label">
+                <i class="fa-brands fa-linkedin" aria-hidden="true"></i> LinkedIn URL
+              </label>
+              <input type="url" id="pf-linkedin" class="form-input"
+                     placeholder="https://linkedin.com/in/username">
+            </div>
+            <div class="form-group">
+              <label for="pf-twitter" class="form-label">
+                <i class="fa-brands fa-x-twitter" aria-hidden="true"></i> Twitter / X URL
+              </label>
+              <input type="url" id="pf-twitter" class="form-input"
+                     placeholder="https://x.com/username">
+            </div>
+            <div class="form-group">
+              <label for="pf-email" class="form-label">
+                <i class="fa-solid fa-envelope" aria-hidden="true"></i> Email
+              </label>
+              <input type="email" id="pf-email" class="form-input"
+                     placeholder="you@email.com">
+            </div>
+            <div class="form-group">
+              <label for="pf-website" class="form-label">
+                <i class="fa-solid fa-globe" aria-hidden="true"></i> Website URL
+              </label>
+              <input type="url" id="pf-website" class="form-input"
+                     placeholder="https://yoursite.com">
+            </div>
+
+            <!-- Tech skills shown in scrolling marquee -->
+            <div class="form-section-divider form-group--full">
+              <span>// TECH SKILLS (shown in scrolling banner)</span>
+            </div>
+            <div class="form-group form-group--full">
+              <label for="pf-skills" class="form-label">Skills (comma-separated)</label>
+              <textarea id="pf-skills" class="form-input form-textarea" rows="2"
+                        placeholder="Python, TensorFlow, SQL, Azure, Docker, Power BI, FastAPI..."></textarea>
+              <span class="input-hint">These fill the animated skills marquee below your profile card.</span>
+            </div>
+
+            <!-- GitHub Sync -->
+            <div class="form-section-divider form-group--full">
+              <span>// GITHUB_SYNC — store posts &amp; profile in your repo (visible on all browsers)</span>
+            </div>
+            <div class="form-group form-group--full" id="gh-sync-status-wrap">
+              <div id="gh-sync-status" class="sync-status-badge"></div>
+            </div>
+            <div class="form-group">
+              <label for="gh-owner" class="form-label">GitHub Username</label>
+              <input type="text" id="gh-owner" class="form-input" placeholder="e.g. bidhanpokhrel" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="gh-repo" class="form-label">Repository Name</label>
+              <input type="text" id="gh-repo" class="form-input" placeholder="e.g. bidhan-pokhrel.github.io" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="gh-branch" class="form-label">Branch</label>
+              <input type="text" id="gh-branch" class="form-input" placeholder="main" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="gh-token" class="form-label">
+                Personal Access Token
+                <a href="https://github.com/settings/tokens/new?scopes=repo&description=Portfolio+Sync" target="_blank" rel="noopener" class="form-label-link">Create token ↗</a>
+              </label>
+              <input type="password" id="gh-token" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+              <p class="input-hint">Needs <code>repo</code> scope. Stored only in this browser's localStorage.</p>
+            </div>
+            <div class="form-group form-group--full">
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-test-github">
+                <i class="fa-solid fa-plug" aria-hidden="true"></i> Test Connection
+              </button>
+              <span id="gh-test-result" class="gh-test-result" style="margin-left:.75rem;font-size:.78rem;"></span>
+            </div>
+
+            <!-- Security — username / password change -->
+            <div class="form-section-divider form-group--full">
+              <span>// SECURITY — leave blank to keep current credentials</span>
+            </div>
+            <div class="form-group">
+              <label for="pf-new-username" class="form-label">New Username</label>
+              <input type="text" id="pf-new-username" class="form-input"
+                     placeholder="Leave blank to keep current" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="pf-new-password" class="form-label">New Password</label>
+              <input type="password" id="pf-new-password" class="form-input"
+                     placeholder="Leave blank to keep current" autocomplete="new-password">
+            </div>
+            <div class="form-group form-group--full">
+              <label for="pf-current-password" class="form-label">
+                Current Password <em>(required only if changing username / password)</em>
+              </label>
+              <input type="password" id="pf-current-password" class="form-input"
+                     placeholder="Enter current password to confirm security changes" autocomplete="current-password">
+            </div>
+          </div><!-- /form-grid -->
+
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" data-close="modal-profile">Cancel</button>
+            <button type="submit" class="btn btn--primary" id="btn-save-profile">
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              Save Changes
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: POST DETAIL VIEW ─────────────────────── -->
+  <!--
+    Full reading view for a post. Admin controls (Edit / Delete)
+    are visible when logged in.
+  -->
+  <div class="modal-overlay" id="modal-post-view"
+       role="dialog" aria-modal="true" aria-labelledby="post-view-title">
+    <div class="modal modal--reading">
+      <div class="modal-header">
+        <div class="post-view-header-left">
+          <span class="modal-tag" id="post-view-tag" aria-hidden="true">// DEV_LOG</span>
+        </div>
+        <div class="post-view-header-right">
+          <!-- Admin actions — hidden until logged in -->
+          <div class="post-view-admin admin-only hidden">
+            <button class="btn btn--ghost btn--sm" id="btn-edit-current-post">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit
+            </button>
+            <button class="btn btn--danger btn--sm" id="btn-delete-current-post">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i> Delete
+            </button>
+          </div>
+          <button class="modal-close" data-close="modal-post-view" aria-label="Close post">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- Optional cover image -->
+        <div id="post-view-cover" class="post-view-cover hidden">
+          <img id="post-view-cover-img" src="" alt="Post cover">
+        </div>
+        <!-- App-specific info bar (only shown for app-type posts) -->
+        <div id="view-app-info" class="view-app-info hidden"></div>
+        <article class="post-view-content">
+          <header class="post-view-meta">
+            <h1 class="post-view-title" id="post-view-title">Post Title</h1>
+            <div class="post-view-info">
+              <span class="post-date" id="post-view-date"></span>
+              <div class="post-tags" id="post-view-tags"></div>
+            </div>
+          </header>
+          <!--
+            .ql-editor class is applied so that Quill's default content
+            styles (h1, h2, blockquote, code, etc.) apply to rendered HTML.
+          -->
+          <div class="post-body ql-editor" id="post-view-body"></div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: CONFIRM DELETE ───────────────────────── -->
+  <div class="modal-overlay" id="modal-confirm"
+       role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal modal--sm modal--danger">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <span class="modal-tag" aria-hidden="true">// WARNING</span>
+          <h2 class="modal-title" id="confirm-title">Confirm Delete</h2>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Are you sure? This cannot be undone.</p>
+        <div class="form-actions">
+          <button class="btn btn--ghost" id="btn-confirm-cancel">Cancel</button>
+          <button class="btn btn--danger" id="btn-confirm-ok">
+            <i class="fa-solid fa-trash" aria-hidden="true"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       SCRIPTS  (load order matters)
+       1. Quill.js from CDN
+       2. Our modules: auth → profile → editor → posts → app
+       ═══════════════════════════════════════════════════ -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+  <script src="github-storage.js"></script>
+  <script src="auth.js"></script>
+  <script src="profile.js"></script>
+  <script src="editor.js"></script>
+  <script src="posts.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
