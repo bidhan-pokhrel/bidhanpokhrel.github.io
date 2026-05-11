@@ -24,12 +24,18 @@
 
 <header class="site-header">
   <div class="header-inner container">
-    <div class="logo"><span>[</span>BP<span>]</span></div>
+    <div class="logo" id="nav-logo"><span>[</span>BP<span>]</span></div>
+    <div class="avatar mini-avatar" id="nav-avatar" style="display: none; width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; margin-right: 0.5rem; cursor: pointer;">BP</div>
+    
     <nav class="main-nav" id="dynamic-nav">
       <!-- Tabs will be injected here automatically -->
       <span style="color: var(--fg-muted); font-size: 0.9rem;">Loading categories...</span>
     </nav>
-    <div class="header-right">
+    <div class="header-right" id="nav-profile-info" style="display: none; align-items: center; gap: 0.5rem; text-align: right; cursor: pointer;">
+      <div style="line-height: 1.2;">
+        <div style="font-size: 0.9rem; font-weight: 700; color: var(--t1);">Bidhan Pokhrel</div>
+        <div style="font-size: 0.7rem; color: var(--blue); font-weight: 600;">Data &amp; AI Engineer</div>
+      </div>
     </div>
   </div>
 </header>
@@ -270,6 +276,13 @@ loadDynamicContent();
 function openPostViewer(url) {
   document.getElementById('dynamic-tabs-container').style.display = 'none';
   document.querySelector('.skills-strip').style.display = 'none';
+  document.querySelector('.profile-card').style.display = 'none';
+  
+  // Update header
+  document.getElementById('nav-logo').style.display = 'none';
+  document.getElementById('nav-avatar').style.display = 'flex';
+  document.getElementById('nav-profile-info').style.display = 'flex';
+
   const viewer = document.getElementById('post-viewer-container');
   const iframe = document.getElementById('post-iframe');
   viewer.style.display = 'block';
@@ -306,9 +319,19 @@ function closePostViewer() {
   document.getElementById('post-iframe').src = '';
   document.getElementById('dynamic-tabs-container').style.display = 'block';
   document.querySelector('.skills-strip').style.display = 'block';
+  document.querySelector('.profile-card').style.display = 'flex';
+  
+  // Restore header
+  document.getElementById('nav-logo').style.display = 'block';
+  document.getElementById('nav-avatar').style.display = 'none';
+  document.getElementById('nav-profile-info').style.display = 'none';
 }
 
 document.getElementById('back-to-grid').addEventListener('click', closePostViewer);
+// Clicking the mini-avatar or header name also goes back
+document.getElementById('nav-avatar').addEventListener('click', closePostViewer);
+document.getElementById('nav-profile-info').addEventListener('click', closePostViewer);
+
 
 </script>
 
