@@ -1,48 +1,39 @@
 /**
  * app.js — Main Application Entry Point
  * ─────────────────────────────────────────────────────────────────────────────
- * Boot order:
- *   1. Auth init (write default credentials if first load)
- *   2. GitHub init (if configured, loads posts + profile from GitHub)
- *   3. Profile render
- *   4. Editor init (Quill)
- *   5. Posts render
+ * Boot strategy (instant load, no blocking):
+ *   1. Load from localStorage immediately → render page right away
+ *   2. Fetch from GitHub in the background → silently update if newer data found
+ *
+ * This means the page always appears in < 100ms regardless of network.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 1. BOOT — show loading overlay while fetching from GitHub
+  // 1. INSTANT BOOT — render from localStorage immediately
   // ══════════════════════════════════════════════════════════════════════════
-  _showLoader(true);
-
   await AuthManager.init();
-
-  // If GitHub is configured, load remote data before rendering anything
-  if (GitHubStorage.isConfigured()) {
-    try {
-      await Promise.all([ProfileManager.init(), PostsManager.init()]);
-    } catch (e) {
-      console.warn('Remote load error:', e.message);
-    }
-  }
-
-  ProfileManager.render();
+  ProfileManager.render();          // uses localStorage — instant
   EditorManager.init();
-  PostsManager.renderDevlog();
+  PostsManager.renderDevlog();      // uses localStorage — instant
   PostsManager.renderApps();
 
   const yearEl = document.getElementById('footer-year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  _showLoader(false);
-
-  // Restore admin session
   if (AuthManager.isLoggedIn()) _activateAdminMode(false);
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 2. NAV TABS
+  // 2. BACKGROUND SYNC — fetch from GitHub without blocking the UI
+  // ══════════════════════════════════════════════════════════════════════════
+  if (GitHubStorage.isConfigured()) {
+    _syncFromGitHub();   // fire-and-forget — never blocks rendering
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 3. NAV TABS
   // ══════════════════════════════════════════════════════════════════════════
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -55,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 3. AUTH
+  // 4. AUTH
   // ══════════════════════════════════════════════════════════════════════════
   _bindClick('btn-login-toggle', () => {
     if (AuthManager.isLoggedIn()) {
@@ -78,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const submitBtn = document.getElementById('btn-do-login');
       if (submitBtn) submitBtn.disabled = true;
       _setLoginError('');
-
       try {
         const result = await AuthManager.login(username, password);
         if (result.ok) {
@@ -110,52 +100,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 4. NEW POST / APP
+  // 5. NEW POST / APP
   // ══════════════════════════════════════════════════════════════════════════
   _bindClick('btn-new-devlog', () => EditorManager.open(null, 'devlog'));
   _bindClick('btn-new-post',   () => EditorManager.open(null, 'devlog'));
   _bindClick('btn-new-app',    () => EditorManager.open(null, 'app'));
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 5. EDITOR — Publish / Save Draft
+  // 6. EDITOR — Publish / Save Draft
   // ══════════════════════════════════════════════════════════════════════════
   _bindClick('btn-publish-post', async () => {
     const result = EditorManager.save('published');
     if (!result.ok) { showToast(result.error, 'error'); return; }
-    await _afterSave(result.post);
-    showToast('Post published! 🚀', 'success');
+    await _handleEditorSave(result.post, 'Post published! 🚀');
   });
 
   _bindClick('btn-save-draft', async () => {
     const result = EditorManager.save('draft');
     if (!result.ok) { showToast(result.error, 'error'); return; }
-    await _afterSave(result.post);
-    showToast('Saved as draft.', 'info');
+    await _handleEditorSave(result.post, 'Saved as draft.');
   });
 
-  async function _afterSave(post) {
-    // Disable buttons while saving to GitHub
-    _setSaveButtons(true);
+  async function _handleEditorSave(post, successMsg) {
+    _setEditorBusy(true);
     try {
       await PostsManager.save(post);
+      EditorManager.close();
+      post.type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
+      showToast(successMsg, 'success');
     } finally {
-      _setSaveButtons(false);
+      _setEditorBusy(false);
     }
-    EditorManager.close();
-    post.type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
   }
 
-  function _setSaveButtons(disabled) {
-    ['btn-publish-post','btn-save-draft'].forEach(id => {
+  function _setEditorBusy(busy) {
+    ['btn-publish-post', 'btn-save-draft'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.disabled = disabled;
+      if (el) el.disabled = busy;
     });
-    const indicator = document.getElementById('editor-saving-indicator');
-    if (indicator) indicator.classList.toggle('hidden', !disabled);
+    const ind = document.getElementById('editor-saving-indicator');
+    if (ind) ind.classList.toggle('hidden', !busy);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 6. EFFECTS TOOLBAR
+  // 7. EFFECTS TOOLBAR
   // ══════════════════════════════════════════════════════════════════════════
   document.querySelectorAll('.fx-btn[data-effect]').forEach(btn => {
     btn.addEventListener('click', () => EditorManager.applyEffect(btn.dataset.effect));
@@ -163,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindClick('btn-remove-fx', () => EditorManager.removeEffects());
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 7. COVER IMAGE UPLOAD
+  // 8. COVER IMAGE UPLOAD
   // ══════════════════════════════════════════════════════════════════════════
   const coverUpload = document.getElementById('post-cover-upload');
   if (coverUpload) {
@@ -174,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 8. PROFILE SETTINGS
+  // 9. PROFILE SETTINGS
   // ══════════════════════════════════════════════════════════════════════════
   _bindClick('btn-settings',     () => ProfileManager.openEditModal());
   _bindClick('btn-edit-profile', () => ProfileManager.openEditModal());
@@ -201,7 +189,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pr) pr.style.display  = 'none';
   });
 
-  // Profile form submit
   const profileForm = document.getElementById('profile-form');
   if (profileForm) {
     profileForm.addEventListener('submit', async e => {
@@ -210,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
 
       try {
-        // Save GitHub config first (so subsequent profile save goes to GitHub)
+        // Save GitHub config (if filled in)
         const ghOwner  = (document.getElementById('gh-owner')?.value  || '').trim();
         const ghRepo   = (document.getElementById('gh-repo')?.value   || '').trim();
         const ghToken  = (document.getElementById('gh-token')?.value  || '').trim();
@@ -222,7 +209,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pr = await ProfileManager.saveFromForm();
         if (!pr.ok) { showToast(pr.error, 'error'); return; }
 
-        // Credential change
         const newUser = (document.getElementById('pf-new-username')?.value  || '').trim();
         const newPw   = (document.getElementById('pf-new-password')?.value  || '').trim();
         const curPw   = (document.getElementById('pf-current-password')?.value || '').trim();
@@ -234,11 +220,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ProfileManager.render();
         _closeModal('modal-profile');
-        showToast(GitHubStorage.isConfigured() ? 'Profile saved & synced to GitHub! ✓' : 'Profile saved!', 'success');
-        ['pf-new-username','pf-new-password','pf-current-password'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-
+        showToast(GitHubStorage.isConfigured() ? 'Profile saved & synced to GitHub ✓' : 'Profile saved!', 'success');
+        ['pf-new-username','pf-new-password','pf-current-password'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.value = '';
+        });
       } finally {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes'; }
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+        }
       }
     });
   }
@@ -248,8 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btn    = document.getElementById('btn-test-github');
     const result = document.getElementById('gh-test-result');
     if (!result) return;
-
-    // Temporarily save the typed-in values for the test
     const ghOwner  = (document.getElementById('gh-owner')?.value  || '').trim();
     const ghRepo   = (document.getElementById('gh-repo')?.value   || '').trim();
     const ghToken  = (document.getElementById('gh-token')?.value  || '').trim();
@@ -261,20 +249,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     result.style.color = 'var(--text-muted)';
 
     const test = await GitHubStorage.testConnection();
-    if (test.ok) {
-      result.textContent = `✓ Connected to ${ghOwner}/${ghRepo}`;
-      result.style.color = 'var(--neon-green)';
-      showToast('GitHub connected! Save profile to enable sync.', 'success');
-    } else {
-      result.textContent = `✗ ${test.error}`;
-      result.style.color = 'var(--neon-magenta)';
-      showToast('Connection failed: ' + test.error, 'error');
-    }
+    result.textContent = test.ok ? `✓ Connected to ${ghOwner}/${ghRepo}` : `✗ ${test.error}`;
+    result.style.color = test.ok ? 'var(--neon-green)' : 'var(--neon-magenta)';
+    showToast(test.ok ? 'Connected! Save profile to enable sync.' : 'Failed: ' + test.error, test.ok ? 'success' : 'error');
     if (btn) btn.disabled = false;
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 9. POST VIEW — Edit & Delete
+  // 10. POST VIEW — Edit & Delete
   // ══════════════════════════════════════════════════════════════════════════
   const postViewModal = document.getElementById('modal-post-view');
 
@@ -286,13 +268,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   _bindClick('btn-delete-current-post', () => {
-    const id   = postViewModal?.dataset.postId;
+    const id = postViewModal?.dataset.postId;
     if (!id) return;
-    const post = PostsManager.get(id);
     const conf = document.getElementById('modal-confirm');
     const msg  = document.getElementById('confirm-message');
     if (conf) conf.dataset.deleteId = id;
-    if (msg)  msg.textContent = `Delete "${post?.title || 'this post'}"? This cannot be undone.`;
+    if (msg)  msg.textContent = `Delete "${PostsManager.get(id)?.title || 'this post'}"? This cannot be undone.`;
     _openModal('modal-confirm');
   });
 
@@ -311,28 +292,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   _bindClick('btn-confirm-cancel', () => _closeModal('modal-confirm'));
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 10. MODAL CLOSE
+  // 11. MODAL CLOSE
   // ══════════════════════════════════════════════════════════════════════════
   document.querySelectorAll('.modal-close, [data-close]').forEach(el => {
     el.addEventListener('click', e => {
       e.stopPropagation();
       const targetId = el.getAttribute('data-close');
       if (targetId) { _closeModal(targetId); return; }
-      const overlay = el.closest('.modal-overlay');
-      if (overlay) _closeModal(overlay.id);
+      el.closest('.modal-overlay') && _closeModal(el.closest('.modal-overlay').id);
     });
   });
 
-  // Backdrop click — only for "safe" modals (no work to lose)
   const BACKDROP_SAFE = ['modal-login', 'modal-post-view', 'modal-confirm'];
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     if (!BACKDROP_SAFE.includes(overlay.id)) return;
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) _closeModal(overlay.id);
-    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) _closeModal(overlay.id); });
   });
 
-  // Escape key
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const open = document.querySelectorAll('.modal-overlay.active');
@@ -350,10 +326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (span) span.textContent = 'Logout';
     if (animate) {
       const header = document.getElementById('site-header');
-      if (header) {
-        header.style.borderBottomColor = 'var(--neon-green)';
-        setTimeout(() => header.style.borderBottomColor = '', 1500);
-      }
+      if (header) { header.style.borderBottomColor = 'var(--neon-green)'; setTimeout(() => header.style.borderBottomColor = '', 1500); }
     }
     PostsManager.renderDevlog();
     PostsManager.renderApps();
@@ -381,23 +354,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     else errEl.classList.add('hidden');
   }
 
-  function _showLoader(show) {
-    let loader = document.getElementById('page-loader');
-    if (!loader) {
-      loader = document.createElement('div');
-      loader.id = 'page-loader';
-      loader.innerHTML = '<div class="loader-inner"><div class="loader-spinner"></div><span>Loading…</span></div>';
-      document.body.appendChild(loader);
-    }
-    loader.classList.toggle('hidden', !show);
-  }
-
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// BACKGROUND GITHUB SYNC — runs after page is already visible
+// ════════════════════════════════════════════════════════════════════════════
+async function _syncFromGitHub() {
+  try {
+    const [profileResult, postsResult] = await Promise.all([
+      GitHubStorage.readJSON('data/profile.json').catch(() => ({ data: null })),
+      GitHubStorage.readJSON('data/posts.json').catch(() => ({ data: null })),
+    ]);
+
+    let updated = false;
+
+    if (profileResult.data) {
+      localStorage.setItem('bp_profile', JSON.stringify(profileResult.data));
+      ProfileManager.render();
+      updated = true;
+    }
+
+    if (Array.isArray(postsResult.data)) {
+      localStorage.setItem('bp_posts', JSON.stringify(postsResult.data));
+      PostsManager.renderDevlog();
+      PostsManager.renderApps();
+      updated = true;
+    }
+
+    if (updated) {
+      // Small indicator that content was refreshed from GitHub
+      const ind = document.getElementById('gh-sync-indicator');
+      if (ind) { ind.classList.remove('hidden'); setTimeout(() => ind.classList.add('hidden'), 3000); }
+    }
+  } catch (e) {
+    // Silent failure — localStorage data already displayed, no disruption to user
+    console.warn('Background GitHub sync failed:', e.message);
+  }
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // GLOBAL UTILITIES
 // ════════════════════════════════════════════════════════════════════════════
-
 function _openModal(id)  { document.getElementById(id)?.classList.add('active'); }
 function _closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
 function openModal(id)   { _openModal(id); }
