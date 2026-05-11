@@ -202,10 +202,18 @@ async function loadDynamicContent() {
       btn.innerHTML = `<i class="fa-solid fa-folder"></i> ${formatTitle(folder)}`;
       
       btn.addEventListener('click', () => {
+        // If a post is open, close it first
+        if (document.getElementById('post-viewer-container').style.display === 'block') {
+          closePostViewer();
+        }
+        
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('tab-' + folder)?.classList.add('active');
+        
+        // Scroll to the content area
+        document.getElementById('dynamic-tabs-container').scrollIntoView({ behavior: 'smooth' });
       });
       
       navContainer.appendChild(btn);
