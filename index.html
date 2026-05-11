@@ -92,6 +92,12 @@
        <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading content from repository...</div>
     </div>
 
+    <!-- POST VIEWER — for displaying clicked posts -->
+    <div id="post-viewer-container" style="display: none; padding-top: 1rem;">
+      <button id="back-to-grid" class="btn btn-ghost" style="margin-bottom: 1.5rem;"><i class="fa-solid fa-arrow-left"></i> Back to Portfolio</button>
+      <iframe id="post-iframe" style="width: 100%; border: none; min-height: 60vh; border-radius: var(--rl);" scrolling="no"></iframe>
+    </div>
+
   </div>
 </main>
 
@@ -236,6 +242,15 @@ async function loadDynamicContent() {
       tabsContainer.appendChild(pane);
     });
 
+    // Add click listeners to post cards to use iframe viewer
+    document.querySelectorAll('.post-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = card.getAttribute('href');
+        openPostViewer(url);
+      });
+    });
+
   } catch (err) {
     console.error(err);
     document.getElementById('dynamic-nav').innerHTML = '<span style="color:var(--red);">Error loading categories</span>';
@@ -248,6 +263,52 @@ async function loadDynamicContent() {
 
 // Load content on start
 loadDynamicContent();
+
+// ═══════════════════════════════════════════════════════════
+// POST VIEWER LOGIC
+// ═══════════════════════════════════════════════════════════
+function openPostViewer(url) {
+  document.getElementById('dynamic-tabs-container').style.display = 'none';
+  document.querySelector('.skills-strip').style.display = 'none';
+  const viewer = document.getElementById('post-viewer-container');
+  const iframe = document.getElementById('post-iframe');
+  viewer.style.display = 'block';
+  
+  iframe.src = url;
+  
+  // Auto-resize iframe
+  iframe.onload = () => {
+    try {
+      const doc = iframe.contentWindow.document;
+      iframe.style.height = (doc.documentElement.scrollHeight || doc.body.scrollHeight) + 'px';
+      
+      // Setup mutation observer to keep resizing if content changes
+      new MutationObserver(() => {
+        iframe.style.height = (doc.documentElement.scrollHeight || doc.body.scrollHeight) + 'px';
+      }).observe(doc.body, { childList: true, subtree: true, attributes: true });
+
+      // Intercept any "Back to Portfolio" links inside the iframe
+      const links = doc.querySelectorAll('a[href="index.html"]');
+      links.forEach(l => {
+        l.addEventListener('click', (e) => {
+          e.preventDefault();
+          closePostViewer();
+        });
+      });
+    } catch (e) {
+      console.warn('Could not auto-resize iframe (maybe cross-origin if testing locally)', e);
+    }
+  };
+}
+
+function closePostViewer() {
+  document.getElementById('post-viewer-container').style.display = 'none';
+  document.getElementById('post-iframe').src = '';
+  document.getElementById('dynamic-tabs-container').style.display = 'block';
+  document.querySelector('.skills-strip').style.display = 'block';
+}
+
+document.getElementById('back-to-grid').addEventListener('click', closePostViewer);
 
 </script>
 
