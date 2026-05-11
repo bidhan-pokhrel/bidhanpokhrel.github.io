@@ -1,0 +1,28 @@
+
+:root{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --yellow:#eab308;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{background:radial-gradient(circle at top, #1e293b, #020617);color:#e5e7eb}
+.hero{text-align:center;padding:70px 20px}
+.app-icon{width:120px;border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,.6)}
+h1{font-size:3rem;margin-top:20px}
+h1 span{color:var(--blue)}
+.hero p{opacity:.85;margin:15px 0 25px}
+.cta{display:inline-block;padding:14px 30px;border-radius:30px;background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;text-decoration:none;font-weight:600}
+.features, .gallery{max-width:1100px;margin:80px auto;padding:0 20px}
+.features h2, .gallery h2{text-align:center;margin-bottom:40px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.card{background:var(--card);padding:25px;border-radius:16px;text-align:center;font-weight:600;box-shadow:0 10px 20px rgba(0,0,0,.4)}
+.card.red{border-top:4px solid var(--red)}
+.card.blue{border-top:4px solid var(--blue)}
+.card.green{border-top:4px solid var(--green)}
+.card.yellow{border-top:4px solid var(--yellow)}
+.images{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
+.images img{width:300px;border-radius:18px;box-shadow:0 20px 30px rgba(0,0,0,.5)}
+footer{text-align:center;padding:40px 20px;opacity:.7}
