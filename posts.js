@@ -62,6 +62,8 @@ const PostsManager = (() => {
   // ── CRUD ───────────────────────────────────────────────────────────────────
 
   function getAll(type) {
+    // Lazy-load from localStorage if cache hasn't been populated yet
+    if (_cache.length === 0) _cache = _loadLocal();
     const filtered = type ? _cache.filter(p => p.type === type) : _cache;
     return [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }

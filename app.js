@@ -1,40 +1,58 @@
 /**
  * app.js — Main Application Entry Point
  * ─────────────────────────────────────────────────────────────────────────────
- * Boot strategy (instant load, no blocking):
- *   1. Load from localStorage immediately → render page right away
- *   2. Fetch from GitHub in the background → silently update if newer data found
- *
- * This means the page always appears in < 100ms regardless of network.
+ * All helper functions are at module level (no hoisting issues).
+ * Boot is wrapped in try/catch so one error never silently kills the whole app.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 1. INSTANT BOOT — render from localStorage immediately
-  // ══════════════════════════════════════════════════════════════════════════
-  await AuthManager.init();
-  ProfileManager.render();          // uses localStorage — instant
-  EditorManager.init();
-  PostsManager.renderDevlog();      // uses localStorage — instant
-  PostsManager.renderApps();
+  // Wire the login button FIRST, before anything else can fail
+  _bindClick('btn-login-toggle', _onLoginToggle);
 
-  const yearEl = document.getElementById('footer-year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  if (AuthManager.isLoggedIn()) _activateAdminMode(false);
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // 2. BACKGROUND SYNC — fetch from GitHub without blocking the UI
-  // ══════════════════════════════════════════════════════════════════════════
-  if (GitHubStorage.isConfigured()) {
-    _syncFromGitHub();   // fire-and-forget — never blocks rendering
+  // Boot the rest of the app; wrap in try/catch so errors don't kill the UI
+  try {
+    await AuthManager.init();
+  } catch (e) {
+    console.error('Auth init error:', e);
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 3. NAV TABS
-  // ══════════════════════════════════════════════════════════════════════════
+  try {
+    ProfileManager.render();
+  } catch (e) {
+    console.error('Profile render error:', e);
+  }
+
+  try {
+    EditorManager.init();
+  } catch (e) {
+    console.error('Editor init error:', e);
+  }
+
+  try {
+    PostsManager.renderDevlog();
+    PostsManager.renderApps();
+  } catch (e) {
+    console.error('Posts render error:', e);
+  }
+
+  // Footer year
+  const yr = document.getElementById('footer-year');
+  if (yr) yr.textContent = new Date().getFullYear();
+
+  // Restore admin session if still valid
+  if (AuthManager.isLoggedIn()) _activateAdminMode(false);
+
+  // Background GitHub sync (non-blocking — page is already visible)
+  if (GitHubStorage.isConfigured()) {
+    _syncFromGitHub();
+  }
+
+  // ── Nav tabs ──────────────────────────────────────────────────────────────
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const target = tab.dataset.tab;
@@ -45,21 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 4. AUTH
-  // ══════════════════════════════════════════════════════════════════════════
-  _bindClick('btn-login-toggle', () => {
-    if (AuthManager.isLoggedIn()) {
-      AuthManager.logout();
-      _deactivateAdminMode();
-      showToast('Logged out.', 'info');
-    } else {
-      _openModal('modal-login');
-      _setLoginError('');
-      setTimeout(() => document.getElementById('login-username')?.focus(), 80);
-    }
-  });
-
+  // ── Login form ────────────────────────────────────────────────────────────
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async e => {
@@ -90,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ── Password show/hide ────────────────────────────────────────────────────
   _bindClick('toggle-password', () => {
     const pw   = document.getElementById('login-password');
     const icon = document.querySelector('#toggle-password i');
@@ -99,16 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (icon) icon.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
   });
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 5. NEW POST / APP
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── New post / app ────────────────────────────────────────────────────────
   _bindClick('btn-new-devlog', () => EditorManager.open(null, 'devlog'));
   _bindClick('btn-new-post',   () => EditorManager.open(null, 'devlog'));
   _bindClick('btn-new-app',    () => EditorManager.open(null, 'app'));
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 6. EDITOR — Publish / Save Draft
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Editor save ───────────────────────────────────────────────────────────
   _bindClick('btn-publish-post', async () => {
     const result = EditorManager.save('published');
     if (!result.ok) { showToast(result.error, 'error'); return; }
@@ -121,38 +122,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await _handleEditorSave(result.post, 'Saved as draft.');
   });
 
-  async function _handleEditorSave(post, successMsg) {
-    _setEditorBusy(true);
-    try {
-      await PostsManager.save(post);
-      EditorManager.close();
-      post.type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
-      showToast(successMsg, 'success');
-    } finally {
-      _setEditorBusy(false);
-    }
-  }
-
-  function _setEditorBusy(busy) {
-    ['btn-publish-post', 'btn-save-draft'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.disabled = busy;
-    });
-    const ind = document.getElementById('editor-saving-indicator');
-    if (ind) ind.classList.toggle('hidden', !busy);
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // 7. EFFECTS TOOLBAR
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Effects toolbar ───────────────────────────────────────────────────────
   document.querySelectorAll('.fx-btn[data-effect]').forEach(btn => {
     btn.addEventListener('click', () => EditorManager.applyEffect(btn.dataset.effect));
   });
   _bindClick('btn-remove-fx', () => EditorManager.removeEffects());
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 8. COVER IMAGE UPLOAD
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Cover image upload ────────────────────────────────────────────────────
   const coverUpload = document.getElementById('post-cover-upload');
   if (coverUpload) {
     coverUpload.addEventListener('change', e => {
@@ -161,9 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 9. PROFILE SETTINGS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Profile settings ──────────────────────────────────────────────────────
   _bindClick('btn-settings',     () => ProfileManager.openEditModal());
   _bindClick('btn-edit-profile', () => ProfileManager.openEditModal());
 
@@ -189,15 +163,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pr) pr.style.display  = 'none';
   });
 
+  // ── Profile form submit ───────────────────────────────────────────────────
   const profileForm = document.getElementById('profile-form');
   if (profileForm) {
     profileForm.addEventListener('submit', async e => {
       e.preventDefault();
       const saveBtn = document.getElementById('btn-save-profile');
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
-
       try {
-        // Save GitHub config (if filled in)
+        // Save GitHub config if filled
         const ghOwner  = (document.getElementById('gh-owner')?.value  || '').trim();
         const ghRepo   = (document.getElementById('gh-repo')?.value   || '').trim();
         const ghToken  = (document.getElementById('gh-token')?.value  || '').trim();
@@ -220,44 +194,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         ProfileManager.render();
         _closeModal('modal-profile');
-        showToast(GitHubStorage.isConfigured() ? 'Profile saved & synced to GitHub ✓' : 'Profile saved!', 'success');
+        showToast(GitHubStorage.isConfigured() ? 'Saved & synced to GitHub ✓' : 'Profile saved!', 'success');
         ['pf-new-username','pf-new-password','pf-current-password'].forEach(id => {
           const el = document.getElementById(id); if (el) el.value = '';
         });
       } finally {
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
-        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes'; }
       }
     });
   }
 
-  // Test GitHub connection
+  // ── Test GitHub connection ─────────────────────────────────────────────────
   _bindClick('btn-test-github', async () => {
     const btn    = document.getElementById('btn-test-github');
     const result = document.getElementById('gh-test-result');
     if (!result) return;
-    const ghOwner  = (document.getElementById('gh-owner')?.value  || '').trim();
-    const ghRepo   = (document.getElementById('gh-repo')?.value   || '').trim();
-    const ghToken  = (document.getElementById('gh-token')?.value  || '').trim();
-    const ghBranch = (document.getElementById('gh-branch')?.value || 'main').trim();
-    GitHubStorage.setConfig({ owner: ghOwner, repo: ghRepo, token: ghToken, branch: ghBranch });
-
+    GitHubStorage.setConfig({
+      owner : (document.getElementById('gh-owner')?.value  || '').trim(),
+      repo  : (document.getElementById('gh-repo')?.value   || '').trim(),
+      token : (document.getElementById('gh-token')?.value  || '').trim(),
+      branch: (document.getElementById('gh-branch')?.value || 'main').trim(),
+    });
     if (btn) btn.disabled = true;
     result.textContent = 'Testing…';
     result.style.color = 'var(--text-muted)';
-
     const test = await GitHubStorage.testConnection();
-    result.textContent = test.ok ? `✓ Connected to ${ghOwner}/${ghRepo}` : `✗ ${test.error}`;
+    result.textContent = test.ok ? `✓ Connected!` : `✗ ${test.error}`;
     result.style.color = test.ok ? 'var(--neon-green)' : 'var(--neon-magenta)';
-    showToast(test.ok ? 'Connected! Save profile to enable sync.' : 'Failed: ' + test.error, test.ok ? 'success' : 'error');
+    showToast(test.ok ? 'Connected! Save profile to enable sync.' : test.error, test.ok ? 'success' : 'error');
     if (btn) btn.disabled = false;
   });
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 10. POST VIEW — Edit & Delete
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Post view — edit / delete ─────────────────────────────────────────────
   const postViewModal = document.getElementById('modal-post-view');
 
   _bindClick('btn-edit-current-post', () => {
@@ -281,9 +249,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conf = document.getElementById('modal-confirm');
     const id   = conf?.dataset.deleteId;
     if (!id) return;
-    const post = PostsManager.get(id);
+    const type = PostsManager.get(id)?.type;
     await PostsManager.remove(id);
-    post?.type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
+    type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
     _closeModal('modal-confirm');
     _closeModal('modal-post-view');
     showToast('Post deleted.', 'info');
@@ -291,124 +259,149 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   _bindClick('btn-confirm-cancel', () => _closeModal('modal-confirm'));
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // 11. MODAL CLOSE
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Modal close: X buttons and [data-close] cancel buttons ───────────────
   document.querySelectorAll('.modal-close, [data-close]').forEach(el => {
     el.addEventListener('click', e => {
       e.stopPropagation();
       const targetId = el.getAttribute('data-close');
       if (targetId) { _closeModal(targetId); return; }
-      el.closest('.modal-overlay') && _closeModal(el.closest('.modal-overlay').id);
+      const overlay = el.closest('.modal-overlay');
+      if (overlay) _closeModal(overlay.id);
     });
   });
 
-  const BACKDROP_SAFE = ['modal-login', 'modal-post-view', 'modal-confirm'];
-  document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    if (!BACKDROP_SAFE.includes(overlay.id)) return;
-    overlay.addEventListener('click', e => { if (e.target === overlay) _closeModal(overlay.id); });
+  // Backdrop click (only for safe modals where no work is lost)
+  ['modal-login', 'modal-post-view', 'modal-confirm'].forEach(id => {
+    const overlay = document.getElementById(id);
+    if (overlay) {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) _closeModal(id);
+      });
+    }
   });
 
+  // Escape key closes topmost open modal
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const open = document.querySelectorAll('.modal-overlay.active');
     if (open.length) _closeModal(open[open.length - 1].id);
   });
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  function _activateAdminMode(animate = true) {
-    document.body.classList.add('is-admin');
-    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-    const span = document.getElementById('login-btn-text');
-    if (span) span.textContent = 'Logout';
-    if (animate) {
-      const header = document.getElementById('site-header');
-      if (header) { header.style.borderBottomColor = 'var(--neon-green)'; setTimeout(() => header.style.borderBottomColor = '', 1500); }
-    }
-    PostsManager.renderDevlog();
-    PostsManager.renderApps();
-  }
-
-  function _deactivateAdminMode() {
-    document.body.classList.remove('is-admin');
-    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-    const span = document.getElementById('login-btn-text');
-    if (span) span.textContent = 'Login';
-    PostsManager.renderDevlog();
-    PostsManager.renderApps();
-  }
-
-  function _bindClick(id, fn) {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('click', fn);
-  }
-
-  function _setLoginError(msg) {
-    const errEl = document.getElementById('login-error');
-    const msgEl = document.getElementById('login-error-msg');
-    if (!errEl) return;
-    if (msg) { if (msgEl) msgEl.textContent = msg; errEl.classList.remove('hidden'); }
-    else errEl.classList.add('hidden');
-  }
-
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// BACKGROUND GITHUB SYNC — runs after page is already visible
-// ════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODULE-LEVEL HELPERS  (defined here — no hoisting ambiguity)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _onLoginToggle() {
+  if (AuthManager.isLoggedIn()) {
+    AuthManager.logout();
+    _deactivateAdminMode();
+    showToast('Logged out.', 'info');
+  } else {
+    _openModal('modal-login');
+    _setLoginError('');
+    setTimeout(() => document.getElementById('login-username')?.focus(), 80);
+  }
+}
+
+function _activateAdminMode(animate) {
+  document.body.classList.add('is-admin');
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+  const span = document.getElementById('login-btn-text');
+  if (span) span.textContent = 'Logout';
+  if (animate) {
+    const header = document.getElementById('site-header');
+    if (header) { header.style.borderBottomColor = 'var(--neon-green)'; setTimeout(() => header.style.borderBottomColor = '', 1500); }
+  }
+  PostsManager.renderDevlog();
+  PostsManager.renderApps();
+}
+
+function _deactivateAdminMode() {
+  document.body.classList.remove('is-admin');
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  const span = document.getElementById('login-btn-text');
+  if (span) span.textContent = 'Login';
+  PostsManager.renderDevlog();
+  PostsManager.renderApps();
+}
+
+// Called by auth.js session-expiry watcher
+function _deactivateFromAuth() { _deactivateAdminMode(); }
+
+function _bindClick(id, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', fn);
+}
+
+function _setLoginError(msg) {
+  const errEl = document.getElementById('login-error');
+  const msgEl = document.getElementById('login-error-msg');
+  if (!errEl) return;
+  if (msg) { if (msgEl) msgEl.textContent = msg; errEl.classList.remove('hidden'); }
+  else errEl.classList.add('hidden');
+}
+
+async function _handleEditorSave(post, successMsg) {
+  const ind = document.getElementById('editor-saving-indicator');
+  ['btn-publish-post','btn-save-draft'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.disabled = true;
+  });
+  if (ind) ind.classList.remove('hidden');
+  try {
+    await PostsManager.save(post);
+    EditorManager.close();
+    post.type === 'app' ? PostsManager.renderApps() : PostsManager.renderDevlog();
+    showToast(successMsg, 'success');
+  } finally {
+    ['btn-publish-post','btn-save-draft'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.disabled = false;
+    });
+    if (ind) ind.classList.add('hidden');
+  }
+}
+
+// Background GitHub sync — runs after page is visible, never blocks UI
 async function _syncFromGitHub() {
   try {
     const [profileResult, postsResult] = await Promise.all([
       GitHubStorage.readJSON('data/profile.json').catch(() => ({ data: null })),
       GitHubStorage.readJSON('data/posts.json').catch(() => ({ data: null })),
     ]);
-
     let updated = false;
-
     if (profileResult.data) {
       localStorage.setItem('bp_profile', JSON.stringify(profileResult.data));
       ProfileManager.render();
       updated = true;
     }
-
     if (Array.isArray(postsResult.data)) {
       localStorage.setItem('bp_posts', JSON.stringify(postsResult.data));
       PostsManager.renderDevlog();
       PostsManager.renderApps();
       updated = true;
     }
-
     if (updated) {
-      // Small indicator that content was refreshed from GitHub
       const ind = document.getElementById('gh-sync-indicator');
       if (ind) { ind.classList.remove('hidden'); setTimeout(() => ind.classList.add('hidden'), 3000); }
     }
   } catch (e) {
-    // Silent failure — localStorage data already displayed, no disruption to user
     console.warn('Background GitHub sync failed:', e.message);
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
 // GLOBAL UTILITIES
-// ════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+
 function _openModal(id)  { document.getElementById(id)?.classList.add('active'); }
 function _closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
 function openModal(id)   { _openModal(id); }
 function closeModal(id)  { _closeModal(id); }
 
-function _deactivateFromAuth() {
-  document.body.classList.remove('is-admin');
-  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-  const span = document.getElementById('login-btn-text');
-  if (span) span.textContent = 'Login';
-  if (typeof PostsManager !== 'undefined') { PostsManager.renderDevlog(); PostsManager.renderApps(); }
-}
-
-function showToast(message, type = 'info') {
+function showToast(message, type) {
+  type = type || 'info';
   let container = document.getElementById('toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -416,7 +409,7 @@ function showToast(message, type = 'info') {
     document.body.appendChild(container);
   }
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
+  toast.className = 'toast toast-' + type;
   toast.textContent = message;
   toast.setAttribute('role', 'alert');
   container.appendChild(toast);
