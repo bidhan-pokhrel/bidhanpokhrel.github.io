@@ -24,18 +24,19 @@
 
 <header class="site-header">
   <div class="header-inner container">
+    <button id="nav-back-btn" class="btn btn-ghost btn-sm" style="display: none; margin-right: 0.5rem; padding-left: 0;"><i class="fa-solid fa-arrow-left"></i> Back to Portfolio</button>
     <div class="logo" id="nav-logo"><span>[</span>BP<span>]</span></div>
-    <div class="avatar mini-avatar" id="nav-avatar" style="display: none; width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; margin-right: 0.5rem; cursor: pointer;"><img src="images/avatar.png" alt="BP"></div>
     
     <nav class="main-nav" id="dynamic-nav">
       <!-- Tabs will be injected here automatically -->
       <span style="color: var(--fg-muted); font-size: 0.9rem;">Loading categories...</span>
     </nav>
-    <div class="header-right" id="nav-profile-info" style="display: none; align-items: center; gap: 0.5rem; text-align: right; cursor: pointer;">
+    <div class="header-right" id="nav-profile-info" style="display: none; align-items: center; gap: 0.75rem; text-align: right; cursor: pointer;">
       <div style="line-height: 1.2;">
         <div style="font-size: 0.9rem; font-weight: 700; color: var(--t1);">Bidhan Pokhrel</div>
         <div style="font-size: 0.7rem; color: var(--blue); font-weight: 600;">Data &amp; AI Engineer</div>
       </div>
+      <div class="avatar mini-avatar" id="nav-avatar" style="width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; cursor: pointer;"><img src="images/avatar.png" alt="BP"></div>
     </div>
   </div>
 </header>
@@ -100,7 +101,6 @@
 
     <!-- POST VIEWER — for displaying clicked posts -->
     <div id="post-viewer-container" style="display: none; padding-top: 1rem;">
-      <button id="back-to-grid" class="btn btn-ghost" style="margin-bottom: 1.5rem;"><i class="fa-solid fa-arrow-left"></i> Back to Portfolio</button>
       <iframe id="post-iframe" style="width: 100%; border: none; min-height: 60vh; border-radius: var(--rl);" scrolling="no"></iframe>
     </div>
 
@@ -280,7 +280,7 @@ function openPostViewer(url) {
   
   // Update header
   document.getElementById('nav-logo').style.display = 'none';
-  document.getElementById('nav-avatar').style.display = 'flex';
+  document.getElementById('nav-back-btn').style.display = 'inline-flex';
   document.getElementById('nav-profile-info').style.display = 'flex';
 
   const viewer = document.getElementById('post-viewer-container');
@@ -343,13 +343,12 @@ function closePostViewer() {
   
   // Restore header
   document.getElementById('nav-logo').style.display = 'block';
-  document.getElementById('nav-avatar').style.display = 'none';
+  document.getElementById('nav-back-btn').style.display = 'none';
   document.getElementById('nav-profile-info').style.display = 'none';
 }
 
-document.getElementById('back-to-grid').addEventListener('click', closePostViewer);
-// Clicking the mini-avatar or header name also goes back
-document.getElementById('nav-avatar').addEventListener('click', closePostViewer);
+document.getElementById('nav-back-btn').addEventListener('click', closePostViewer);
+// Clicking the header profile area also goes back
 document.getElementById('nav-profile-info').addEventListener('click', closePostViewer);
 
 
