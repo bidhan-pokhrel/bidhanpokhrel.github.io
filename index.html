@@ -79,7 +79,7 @@
         <div class="stat-box"><div class="stat-n" id="stat-posts">0</div><div class="stat-l">Posts</div></div>
         <div class="stat-box"><div class="stat-n" id="stat-apps">0</div><div class="stat-l">Categories</div></div>
         <div class="stat-box">
-          <div class="stat-n">21</div><div class="stat-l">Skills</div>
+          <div class="stat-n" id="stat-skills">0</div><div class="stat-l">Skills</div>
         </div>
       </div>
     </div>
@@ -128,6 +128,7 @@ const SKILLS = [
 ];
 
 document.getElementById('fy').textContent = new Date().getFullYear();
+document.getElementById('stat-skills').textContent = SKILLS.length;
 buildMarquee();
 
 function buildMarquee() {
