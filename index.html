@@ -24,15 +24,22 @@
 
 <header class="site-header">
   <div class="header-inner container">
+    <button id="nav-back-btn" onclick="closePost()" class="btn btn-ghost btn-sm" style="display:none;flex-shrink:0"><i class="fa-solid fa-arrow-left"></i> Back</button>
     <div class="logo" id="nav-logo"><span>[</span>BP<span>]</span></div>
     
     <nav class="main-nav" id="dynamic-nav">
       <!-- Tabs will be injected here automatically -->
       <span style="color: var(--fg-muted); font-size: 0.9rem;">Loading categories...</span>
     </nav>
-        <div style="font-size: 0.7rem; color: var(--blue); font-weight: 600;">MSc.Data Science</div>
+
+    <div class="header-right">
+      <div class="header-info">
+        <div class="header-name">Bidhan Pokhrel</div>
+        <div class="header-role">MSc.Data Science</div>
       </div>
-      <div class="avatar mini-avatar" id="nav-avatar" style="width: 36px; height: 36px; font-size: 0.9rem; border-width: 1px; flex-shrink: 0; cursor: pointer;"><img src="images/avatar.png" alt="BP"></div>
+      <div class="avatar mini-avatar" id="nav-avatar" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <img src="images/avatar.png" alt="BP">
+      </div>
     </div>
   </div>
 </header>
@@ -93,6 +100,15 @@
        <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading content from repository...</div>
     </div>
   </div>
+    <!-- POST VIEWER: full-width iframe sits between header and footer -->
+    <div id="post-viewer" style="display:none">
+      <iframe id="post-iframe"
+        style="display:block;width:100%;height:calc(100vh - 58px - 50px);border:none;background:var(--bg)"
+        scrolling="yes"
+        title="Post content">
+      </iframe>
+    </div>
+
 </main>
 
 <footer class="site-footer">
@@ -109,283 +125,212 @@
 <div id="toast-container"></div>
 
 <script>
-const SKILLS = [
-  // Programming Languages
-  'Python', 'R',
-
-  // R Programming Tools & Packages
-  'tidyverse', 'dplyr', 'ggplot2', 'tidyr',
-  'caret', 'randomForest', 'shiny', 'R Markdown',
-
-  // Mathematics & Statistics
-  'Statistics', 'Probability', 'Hypothesis Testing',
-
-  // Data Science & Analytics
-  'Data Analysis', 'Data Analytics',
-  'Exploratory Data Analysis (EDA)',
-  'Feature Engineering',
-  'Time Series Analysis',
-  'Regression', 'Classification', 'Clustering',
-  'Model Evaluation', 'Cross Validation',
-
-  // Machine Learning & AI
-  'Machine Learning', 'Deep Learning',
-  'Explainable AI (SHAP, LIME)',
-  'Natural Language Processing (NLP)',
-  'Computer Vision',
-  'Generative AI',
-  'Large Language Models (LLMs)',
-  'Prompt Engineering',
-  'Retrieval-Augmented Generation (RAG)',
-  'LangChain',
-
-  // Frameworks & Libraries
-  'TensorFlow', 'PyTorch',
-  'Pandas', 'NumPy',
-
-  // Big Data & Data Engineering
-  'Apache Spark', 'PySpark',
-  'Hadoop',
-  'ETL Pipelines',
-  'Data Modeling',
-  'Data Quality',
-
-  // Databases
-  'SQL', 'NoSQL',
-  'MySQL','MongoDB',
-
-  // Cloud & MLOps
-  'AWS', 'GCP','Docker','MLflow',
-  'CI/CD for Machine Learning',
-  'Model Deployment',
-  'Monitoring & Drift Detection',
-  
-  // Visualization & BI
-  'Data Visualization',
-  'Tableau',
-  'Power BI',
-  'Matplotlib',
-  'Seaborn',
-  'Altair',
-
-  // Business & Documentation
-  'Business Requirements Documentation (BRD)',
-  'RFP Analysis',
-  'Stakeholder Communication',
-  'Requirement Elicitation',
-  'KPI Definition'
+const SKILLS=[
+  'Python','R','tidyverse','dplyr','ggplot2','tidyr','caret','randomForest','shiny','R Markdown',
+  'Statistics','Probability','Hypothesis Testing','Data Analysis','Data Analytics',
+  'Exploratory Data Analysis (EDA)','Feature Engineering','Time Series Analysis',
+  'Regression','Classification','Clustering','Model Evaluation','Cross Validation',
+  'Machine Learning','Deep Learning','Explainable AI (SHAP, LIME)',
+  'Natural Language Processing (NLP)','Computer Vision','Generative AI',
+  'Large Language Models (LLMs)','Prompt Engineering',
+  'Retrieval-Augmented Generation (RAG)','LangChain',
+  'TensorFlow','PyTorch','Pandas','NumPy',
+  'Apache Spark','PySpark','Hadoop','ETL Pipelines','Data Modeling','Data Quality',
+  'SQL','NoSQL','MySQL','MongoDB',
+  'AWS','GCP','Docker','MLflow','CI/CD for Machine Learning',
+  'Model Deployment','Monitoring & Drift Detection',
+  'Data Visualization','Tableau','Power BI','Matplotlib','Seaborn','Altair',
+  'Business Requirements Documentation (BRD)','RFP Analysis',
+  'Stakeholder Communication','Requirement Elicitation','KPI Definition'
 ];
 
-document.getElementById('fy').textContent = new Date().getFullYear();
-document.getElementById('stat-skills').textContent = SKILLS.length;
+document.getElementById('fy').textContent=new Date().getFullYear();
+document.getElementById('stat-skills').textContent=SKILLS.length;
 buildMarquee();
 
-function buildMarquee() {
-  const html = SKILLS.map(s => `<span class="skill-pill">${s}</span>`).join('');
-  document.getElementById('skills-a').innerHTML = html;
-  document.getElementById('skills-b').innerHTML = html;
+function buildMarquee(){
+  const h=SKILLS.map(s=>`<span class="skill-pill">${s}</span>`).join('');
+  document.getElementById('skills-a').innerHTML=h;
+  document.getElementById('skills-b').innerHTML=h;
 }
 
-// Format folder/file names as readable labels
-function formatTitle(str) {
-  return str.replace(/-/g, ' ').replace(/_/g, ' ')
-            .replace(/\.html$/i, '')
-            .replace(/\b\w/g, l => l.toUpperCase());
+function formatTitle(s){
+  return s.replace(/-/g,' ').replace(/_/g,' ').replace(/\.html$/i,'')
+          .replace(/\b\w/g,l=>l.toUpperCase());
 }
 
-// ════════════════════════════════════════════════════════
-// LOAD CONTENT
-// Uses your existing git tree API (one call, gets everything).
-// Now supports two layouts inside a category folder:
-//   A)  category/post.html              ← simple file
-//   B)  category/post-folder/index.html ← folder with images
-// Cards navigate directly — no iframe.
-// ════════════════════════════════════════════════════════
-const GITHUB_API = "https://api.github.com/repos/bidhan-pokhrel/bidhanpokhrel.github.io/git/trees/main?recursive=1";
-const GITHUB_RAW = "https://raw.githubusercontent.com/bidhan-pokhrel/bidhanpokhrel.github.io/main";
-const EXCLUDE    = new Set(['.git','assets','css','js','images','posts']);
+const GH_API='https://api.github.com/repos/bidhan-pokhrel/bidhanpokhrel.github.io/git/trees/main?recursive=1';
+const GH_RAW='https://raw.githubusercontent.com/bidhan-pokhrel/bidhanpokhrel.github.io/main';
+const EXCL  =new Set(['.git','assets','css','js','images','posts']);
 
-async function loadDynamicContent() {
-  try {
-    const res = await fetch(GITHUB_API);
-    if (!res.ok) throw new Error('Could not fetch repo tree');
-    const data = await res.json();
+async function loadDynamicContent(){
+  try{
+    const res=await fetch(GH_API);
+    if(!res.ok) throw new Error('Could not fetch repo tree');
+    const data=await res.json();
 
-    // ── Group posts by top-level category folder ──────────
-    const categories = {};
-    // dedup key → entry map so subfolder index.html isn't counted twice
-    const seen = {};
-
-    data.tree.forEach(item => {
-      if (item.type !== 'blob' || !item.path.endsWith('.html')) return;
-      const parts = item.path.split('/');
-      const cat   = parts[0];
-      if (EXCLUDE.has(cat) || parts.length < 2) return;
-
-      if (!categories[cat]) categories[cat] = [];
-
-      if (parts.length === 2) {
-        // Layout A: category/post.html
-        const key = item.path;
-        if (!seen[key]) { seen[key] = true; categories[cat].push({ path: item.path, url: '/' + item.path }); }
-
-      } else if (parts.length === 3 && parts[2] === 'index.html') {
-        // Layout B: category/post-folder/index.html  →  card links to /category/post-folder/
-        const key = parts[0] + '/' + parts[1];
-        if (!seen[key]) { seen[key] = true; categories[cat].push({ path: item.path, url: '/' + key + '/' }); }
+    const cats={},seen={};
+    data.tree.forEach(item=>{
+      if(item.type!=='blob'||!item.path.endsWith('.html'))return;
+      const parts=item.path.split('/'),cat=parts[0];
+      if(EXCL.has(cat)||parts.length<2)return;
+      if(!cats[cat])cats[cat]=[];
+      if(parts.length===2){
+        if(!seen[item.path]){seen[item.path]=1;cats[cat].push({path:item.path});}
+      }else if(parts.length===3&&parts[2]==='index.html'){
+        const k=parts[0]+'/'+parts[1];
+        if(!seen[k]){seen[k]=1;cats[cat].push({path:item.path});}
       }
     });
 
-    const folderNames = Object.keys(categories).sort();
-    const totalPosts  = folderNames.reduce((s, c) => s + categories[c].length, 0);
+    const folders=Object.keys(cats).sort();
+    const total=folders.reduce((s,c)=>s+cats[c].length,0);
+    document.getElementById('stat-posts').textContent=total;
+    document.getElementById('stat-apps').textContent=folders.length;
 
-    document.getElementById('stat-posts').textContent = totalPosts;
-    document.getElementById('stat-apps').textContent  = folderNames.length;
-
-    if (!folderNames.length) {
-      document.getElementById('dynamic-nav').innerHTML = '<span>No categories found.</span>';
-      document.getElementById('dynamic-tabs-container').innerHTML = `
-        <div class="empty" style="padding:2rem;text-align:center;color:var(--fg-muted)">
-          <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-          <h3>Nothing here yet</h3>
-          <p>Create a folder (e.g. <code>devblog</code>) and push an HTML file to GitHub.</p>
-        </div>`;
+    if(!folders.length){
+      document.getElementById('dynamic-nav').innerHTML='<span style="color:var(--t3)">No categories found</span>';
+      document.getElementById('dynamic-tabs-container').innerHTML=`<div class="empty" style="text-align:center;padding:3rem"><div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Nothing here yet</h3><p>Create a folder and push an HTML file to GitHub.</p></div>`;
       return;
     }
 
-    // ── Build nav tabs immediately ────────────────────────
-    const navContainer = document.getElementById('dynamic-nav');
-    navContainer.innerHTML = '';
-    folderNames.forEach((folder, i) => {
-      const btn = document.createElement('button');
-      btn.className   = `nav-btn ${i === 0 ? 'active' : ''}`;
-      btn.dataset.tab = folder;
-      btn.innerHTML   = `<i class="fa-solid fa-folder"></i> ${formatTitle(folder)}`;
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    // Build nav tabs
+    const nav=document.getElementById('dynamic-nav');
+    nav.innerHTML='';
+    folders.forEach((folder,i)=>{
+      const btn=document.createElement('button');
+      btn.className=`nav-btn${i===0?' active':''}`;
+      btn.dataset.tab=folder;
+      btn.innerHTML=`<i class="fa-solid fa-folder"></i> ${formatTitle(folder)}`;
+      btn.addEventListener('click',()=>{
+        closePost();
+        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('tab-' + folder)?.classList.add('active');
-        document.getElementById('dynamic-tabs-container').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('tab-'+folder)?.classList.add('active');
+        document.getElementById('dynamic-tabs-container').scrollIntoView({behavior:'smooth'});
       });
-      navContainer.appendChild(btn);
+      nav.appendChild(btn);
     });
 
-    // ── Build tab panes with skeletons ────────────────────
-    const tabsContainer = document.getElementById('dynamic-tabs-container');
-    tabsContainer.innerHTML = '';
-    folderNames.forEach((folder, i) => {
-      const pane = document.createElement('div');
-      pane.className = `tab-pane ${i === 0 ? 'active' : ''}`;
-      pane.id = `tab-${folder}`;
-      pane.innerHTML = `
-        <div class="section-hdr">
-          <div>
-            <div class="section-tag">// ${folder.toUpperCase().replace(/-/g,'_')}</div>
-            <h2 class="section-h">${formatTitle(folder)}</h2>
-          </div>
-        </div>
-        <div class="posts-grid" id="grid-${folder}">
-          <div class="loading-cards">
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-          </div>
-        </div>`;
-      tabsContainer.appendChild(pane);
+    // Build tab panes with skeletons
+    const tabsEl=document.getElementById('dynamic-tabs-container');
+    tabsEl.innerHTML='';
+    folders.forEach((folder,i)=>{
+      const pane=document.createElement('div');
+      pane.className=`tab-pane${i===0?' active':''}`;
+      pane.id=`tab-${folder}`;
+      pane.innerHTML=`<div class="section-hdr"><div><div class="section-tag">// ${folder.toUpperCase().replace(/-/g,'_')}</div><h2 class="section-h">${formatTitle(folder)}</h2></div></div><div class="posts-grid" id="grid-${folder}"><div class="loading-cards"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>`;
+      tabsEl.appendChild(pane);
     });
 
-    // ── Fetch metadata for all posts in parallel ──────────
-    await Promise.all(folderNames.map(async folder => {
-      const entries = categories[folder];
-      const metas   = await Promise.all(entries.map(fetchMeta));
-      const posts   = metas.filter(Boolean)
-                           .sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-      renderGrid(folder, posts);
+    // Fetch post metadata in parallel
+    await Promise.all(folders.map(async folder=>{
+      const metas=await Promise.all(cats[folder].map(fetchMeta));
+      const posts=metas.filter(Boolean).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+      renderGrid(folder,posts);
     }));
 
-  } catch (err) {
+  }catch(err){
     console.error(err);
-    document.getElementById('dynamic-nav').innerHTML =
-      '<span style="color:var(--red)">Error loading categories</span>';
-    document.getElementById('dynamic-tabs-container').innerHTML =
-      `<div class="empty" style="text-align:center;color:var(--fg-muted)">
-        <p>Could not connect to GitHub. Make sure you have pushed your folders to the main branch.</p>
-       </div>`;
+    document.getElementById('dynamic-nav').innerHTML='<span style="color:var(--red)">Error loading</span>';
+    document.getElementById('dynamic-tabs-container').innerHTML=`<div class="empty" style="text-align:center"><p>Could not connect to GitHub.</p></div>`;
   }
 }
 
-// ── Fetch one HTML and read its <meta> tags ───────────────
-async function fetchMeta(entry) {
-  try {
-    const r    = await fetch(`${GITHUB_RAW}/${entry.path}?v=${Date.now()}`);
-    if (!r.ok) return null;
-    const html = await r.text();
-    const doc  = new DOMParser().parseFromString(html, 'text/html');
-    const meta = n => doc.querySelector(`meta[name="${n}"]`)?.getAttribute('content')?.trim()||'';
-
-    if (meta('post-hidden') === 'true') return null;
-
-    // Cover: if a relative filename, resolve to the correct path
-    let cover = meta('post-cover');
-    if (cover && !cover.startsWith('http') && !cover.startsWith('/')) {
-      const dir = entry.path.substring(0, entry.path.lastIndexOf('/') + 1);
-      cover = '/' + dir + cover;
+async function fetchMeta(entry){
+  try{
+    const r=await fetch(`${GH_RAW}/${entry.path}?v=${Date.now()}`);
+    if(!r.ok)return null;
+    const html=await r.text();
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const meta=n=>doc.querySelector(`meta[name="${n}"]`)?.getAttribute('content')?.trim()||'';
+    if(meta('post-hidden')==='true')return null;
+    let cover=meta('post-cover');
+    if(cover&&!cover.startsWith('http')&&!cover.startsWith('/')){
+      const dir=entry.path.substring(0,entry.path.lastIndexOf('/')+1);
+      cover='/'+dir+cover;
     }
-
-    const rawTitle = doc.querySelector('title')?.textContent || entry.path;
-    const title    = meta('post-title') ||
-                     rawTitle.replace(/\s*[|—–-]\s*Bidhan Pokhrel.*/i,'').trim() ||
-                     formatTitle(entry.path);
-
-    return {
-      url    : entry.url,
-      title,
-      date   : meta('post-date')    || '',
-      excerpt: meta('post-excerpt') || '',
-      tags   : meta('post-tags') ? meta('post-tags').split(',').map(t=>t.trim()).filter(Boolean) : [],
-      cover,
-    };
-  } catch { return null; }
+    const raw=doc.querySelector('title')?.textContent||entry.path;
+    const title=meta('post-title')||raw.replace(/\s*[|\u2014\u2013-]\s*Bidhan Pokhrel.*/i,'').trim()||formatTitle(entry.path);
+    return{path:entry.path,title,date:meta('post-date')||'',excerpt:meta('post-excerpt')||'',tags:meta('post-tags')?meta('post-tags').split(',').map(t=>t.trim()).filter(Boolean):[],cover};
+  }catch{return null;}
 }
 
-// ── Render one grid ───────────────────────────────────────
-function renderGrid(folder, posts) {
-  const grid = document.getElementById(`grid-${folder}`);
-  if (!grid) return;
-
-  if (!posts.length) {
-    grid.innerHTML = `
-      <div class="empty" style="grid-column:1/-1">
-        <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-        <h3>Nothing in <code>${folder}/</code> yet</h3>
-        <p>Add an HTML file and push to GitHub — it appears here automatically.</p>
-      </div>`;
+function renderGrid(folder,posts){
+  const grid=document.getElementById(`grid-${folder}`);
+  if(!grid)return;
+  if(!posts.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div><h3>Nothing in <code>${esc(folder)}/</code> yet</h3><p>Add an HTML file and push.</p></div>`;
     return;
   }
-
-  // Cards link directly — no iframe
-  grid.innerHTML = posts.map(p => `
-    <a href="${p.url}" class="post-card" aria-label="${esc(p.title)}">
-      ${p.cover ? `<div class="card-cover"><img src="${esc(p.cover)}" alt="" loading="lazy"></div>` : ''}
+  grid.innerHTML=posts.map(p=>`
+    <div class="post-card" role="button" tabindex="0"
+         onclick="openPost('${esc(p.path)}')"
+         onkeydown="if(event.key==='Enter')openPost('${esc(p.path)}')"
+         style="cursor:pointer" aria-label="${esc(p.title)}">
+      ${p.cover?`<div class="card-cover"><img src="${esc(p.cover)}" alt="" loading="lazy"></div>`:''}
       <div class="card-body">
-        <div class="card-meta">
-          <span class="card-date">${fmtDate(p.date)}</span>
-        </div>
+        <div class="card-meta"><span class="card-date">${fmtDate(p.date)}</span></div>
         <div class="card-title">${esc(p.title)}</div>
-        ${p.excerpt ? `<p class="card-excerpt">${esc(p.excerpt)}</p>` : ''}
-        ${p.tags.length ? `<div class="tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+        ${p.excerpt?`<p class="card-excerpt">${esc(p.excerpt)}</p>`:''}
+        ${p.tags.length?`<div class="tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
       </div>
-    </a>`).join('');
+    </div>`).join('');
 }
 
-// ── Helpers ───────────────────────────────────────────────
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtDate(d) {
-  if (!d) return '';
-  try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); }
-  catch { return d; }
+// ════════════════════════════════════════════════════════
+// IFRAME VIEWER
+// iframe height = 100vh - header(58px) - footer(50px)
+// Header stays at top, footer stays at bottom — always.
+// ════════════════════════════════════════════════════════
+function openPost(path){
+  const viewer =document.getElementById('post-viewer');
+  const iframe =document.getElementById('post-iframe');
+  const tabsEl =document.getElementById('dynamic-tabs-container');
+  const profile=document.querySelector('.profile-card');
+  const skills =document.querySelector('.skills-strip');
+  const footer =document.querySelector('.site-footer');
+  const main   =document.querySelector('.site-main');
+
+  // Hide portfolio content, show iframe viewer
+  tabsEl.style.display ='none';
+  profile.style.display='none';
+  skills.style.display ='none';
+  main.style.padding   ='0';
+  footer.style.position='sticky';
+  footer.style.bottom  ='0';
+
+  viewer.style.display='block';
+  document.getElementById('nav-back-btn').style.display='inline-flex';
+
+  iframe.src = '/' + path;
+  window.scrollTo({top:0,behavior:'smooth'});
 }
+
+function closePost(){
+  const viewer =document.getElementById('post-viewer');
+  const iframe =document.getElementById('post-iframe');
+  const tabsEl =document.getElementById('dynamic-tabs-container');
+  const profile=document.querySelector('.profile-card');
+  const skills =document.querySelector('.skills-strip');
+  const footer =document.querySelector('.site-footer');
+  const main   =document.querySelector('.site-main');
+
+  iframe.src='';
+  viewer.style.display='none';
+  tabsEl.style.display='block';
+  profile.style.display='flex';
+  skills.style.display='block';
+  main.style.padding='';
+  footer.style.position='';
+  footer.style.bottom='';
+  document.getElementById('nav-back-btn').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(d){if(!d)return '';try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch{return d;}}
 
 loadDynamicContent();
 </script>
