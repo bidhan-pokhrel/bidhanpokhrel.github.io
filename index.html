@@ -197,17 +197,29 @@ async function loadDynamicContent(){
     // Build nav tabs
     const nav=document.getElementById('dynamic-nav');
     nav.innerHTML='';
+
+    const homeBtn=document.createElement('button');
+    homeBtn.className='nav-btn';
+    homeBtn.id='nav-home-btn';
+    homeBtn.innerHTML='<i class="fa-solid fa-house"></i> Home';
+    homeBtn.addEventListener('click',()=>{
+      _closePostUI();
+      _activateHomeView();
+      history.pushState(null,'',location.pathname+location.search);
+      document.querySelector('.profile-card').scrollIntoView({behavior:'smooth'});
+    });
+    homeBtn.classList.add('active');
+    nav.appendChild(homeBtn);
+
     folders.forEach((folder,i)=>{
       const btn=document.createElement('button');
-      btn.className=`nav-btn${i===0?' active':''}`;
+      btn.className='nav-btn';
       btn.dataset.tab=folder;
       btn.innerHTML=`<i class="fa-solid fa-folder"></i> ${formatTitle(folder)}`;
       btn.addEventListener('click',()=>{
-        closePost();
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-'+folder)?.classList.add('active');
+        _closePostUI();
+        _activateTabUI(folder);
+        history.pushState(null,'','#'+folder);
         document.getElementById('dynamic-tabs-container').scrollIntoView({behavior:'smooth'});
       });
       nav.appendChild(btn);
@@ -218,7 +230,7 @@ async function loadDynamicContent(){
     tabsEl.innerHTML='';
     folders.forEach((folder,i)=>{
       const pane=document.createElement('div');
-      pane.className=`tab-pane${i===0?' active':''}`;
+      pane.className='tab-pane active';
       pane.id=`tab-${folder}`;
       pane.innerHTML=`<div class="section-hdr"><div><div class="section-tag">// ${folder.toUpperCase().replace(/-/g,'_')}</div><h2 class="section-h">${formatTitle(folder)}</h2></div></div><div class="posts-grid" id="grid-${folder}"><div class="loading-cards"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div>`;
       tabsEl.appendChild(pane);
@@ -279,12 +291,25 @@ function renderGrid(folder,posts){
     </div>`).join('');
 }
 
-// ════════════════════════════════════════════════════════
-// IFRAME VIEWER
-// iframe height = 100vh - header(58px) - footer(50px)
-// Header stays at top, footer stays at bottom — always.
-// ════════════════════════════════════════════════════════
-function openPost(path){
+// ── Hash-based routing ────────────────────────────────────
+let _activeTab=null;
+
+function _activateHomeView(){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-home-btn')?.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.add('active'));
+  _activeTab=null;
+}
+
+function _activateTabUI(folder){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.nav-btn[data-tab="${folder}"]`)?.classList.add('active');
+  document.getElementById('tab-'+folder)?.classList.add('active');
+  _activeTab=folder;
+}
+
+function _showPostUI(path){
   const viewer =document.getElementById('post-viewer');
   const iframe =document.getElementById('post-iframe');
   const tabsEl =document.getElementById('dynamic-tabs-container');
@@ -292,23 +317,19 @@ function openPost(path){
   const skills =document.querySelector('.skills-strip');
   const footer =document.querySelector('.site-footer');
   const main   =document.querySelector('.site-main');
-
-  // Hide portfolio content, show iframe viewer
   tabsEl.style.display ='none';
   profile.style.display='none';
   skills.style.display ='none';
   main.style.padding   ='0';
   footer.style.position='sticky';
   footer.style.bottom  ='0';
-
-  viewer.style.display='block';
+  viewer.style.display ='block';
   document.getElementById('nav-back-btn').style.display='inline-flex';
-
-  iframe.src = '/' + path;
+  iframe.src='/'+path;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function closePost(){
+function _closePostUI(){
   const viewer =document.getElementById('post-viewer');
   const iframe =document.getElementById('post-iframe');
   const tabsEl =document.getElementById('dynamic-tabs-container');
@@ -316,23 +337,54 @@ function closePost(){
   const skills =document.querySelector('.skills-strip');
   const footer =document.querySelector('.site-footer');
   const main   =document.querySelector('.site-main');
-
   iframe.src='';
-  viewer.style.display='none';
-  tabsEl.style.display='block';
+  viewer.style.display ='none';
+  tabsEl.style.display ='block';
   profile.style.display='flex';
-  skills.style.display='block';
-  main.style.padding='';
+  skills.style.display ='block';
+  main.style.padding   ='';
   footer.style.position='';
-  footer.style.bottom='';
+  footer.style.bottom  ='';
   document.getElementById('nav-back-btn').style.display='none';
+}
+
+function openPost(path){
+  if(!_activeTab)_activeTab=path.split('/')[0];
+  _showPostUI(path);
+  history.pushState(null,'','#'+path);
+}
+
+function closePost(){
+  _closePostUI();
+  const tab=_activeTab||document.querySelector('.nav-btn.active')?.dataset.tab;
+  history.pushState(null,'',tab?'#'+tab:location.pathname+location.search);
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+function _navigateByHash(){
+  const hash=decodeURIComponent(location.hash.slice(1));
+  if(!hash){
+    _closePostUI();
+    _activateHomeView();
+    return;
+  }
+  const parts=hash.split('/');
+  if(parts.length>=2){
+    _activeTab=parts[0];
+    _showPostUI(hash);
+  }else{
+    _closePostUI();
+    _activateTabUI(hash);
+  }
+}
+
+window.addEventListener('popstate',_navigateByHash);
+// ─────────────────────────────────────────────────────────
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtDate(d){if(!d)return '';try{return new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch{return d;}}
 
-loadDynamicContent();
+loadDynamicContent().then(_navigateByHash);
 </script>
 
 </body>
